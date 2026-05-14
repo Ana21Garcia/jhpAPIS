@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Models\Cotizaciones;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
+
+class CotizacionesController extends Controller
+{
+    // 1. LISTAR: Ahora incluimos detalles y productos para que la descripción no salga vacía
+    public function index()
+    {
+        $cotizaciones = Cotizaciones::with(['cliente', 'detalles.producto'])->get();
+        return response()->json($cotizaciones, 200);
+    }
+
+    public function store(Request $request)
+    {
+        try {
+            return DB::transaction(function () use ($request) {
+                $cotizacion = Cotizaciones::create([
+                    'id_cliente'        => $request->id_cliente,
+                    'id_empleado'       => $request->id_empleado ?? 1,
+                    'cot_fecha'         => now(),
+                    'cot_vigencia_dias' => $request->cot_vigencia_dias ?? 15,
+                    'cot_total'         => $request->cot_total,
+                ]);
+
+                if ($request->has('detalles')) {
+                    foreach ($request->detalles as $item) {
+                        $cotizacion->detalles()->create([
+                            'id_producto'         => $item['id_producto'],
+                            'det_cantidad'        => $item['det_cantidad'],
+                            'det_precio_unitario' => $item['det_precio_unitario'],
+                        ]);
+                    }
+                }
+                return response()->json(['message' => 'Guardado con éxito'], 201);
+            });
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // 2. ACTUALIZAR: Este es el método que te faltaba y causaba el error
+    public function update(Request $request, $id)
+    {
+        try {
+            return DB::transaction(function () use ($request, $id) {
+                $cotizacion = Cotizaciones::findOrFail($id);
+                
+                $cotizacion->update([
+                    'id_cliente'        => $request->id_cliente,
+                    'cot_vigencia_dias' => $request->cot_vigencia_dias,
+                    'cot_total'         => $request->cot_total,
+                ]);
+
+                // Borramos detalles viejos y re-insertamos los nuevos
+                $cotizacion->detalles()->delete();
+
+                foreach ($request->detalles as $item) {
+                    $cotizacion->detalles()->create([
+                        'id_producto'         => $item['id_producto'],
+                        'det_cantidad'        => $item['det_cantidad'],
+                        'det_precio_unitario' => $item['det_precio_unitario'],
+                    ]);
+                }
+
+                return response()->json(['message' => 'Actualizado correctamente'], 200);
+            });
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        $cotizacion = Cotizaciones::with(['cliente', 'detalles.producto'])->findOrFail($id);
+        return response()->json($cotizacion);
+    }
+
+    public function destroy($id)
+    {
+        Cotizaciones::destroy($id);
+        return response()->json(['message' => 'Cotización eliminada'], 200);
+    }
+}

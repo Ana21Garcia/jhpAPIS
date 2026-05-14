@@ -1,0 +1,78 @@
+<?php
+
+namespace App\Http\Controllers\API;
+
+use App\Models\Empleados;
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+
+class EmpleadosController extends Controller
+{
+    // LISTAR TODOS LOS EMPLEADOS
+    public function index()
+    {
+        // El campo 'emp_password' no aparecerá gracias al $hidden del modelo
+        return response()->json(Empleados::all(), 200);
+    }
+
+    // CREAR UN NUEVO EMPLEADO
+    public function store(Request $request)
+    {
+        $data = $request->all();
+        
+        // Encriptar la contraseña antes de guardar
+        if (isset($data['emp_password'])) {
+            $data['emp_password'] = Hash::make($data['emp_password']);
+        }
+
+        $empleado = Empleados::create($data);
+
+        return response()->json([
+            'message' => 'Empleado registrado con éxito',
+            'data' => $empleado
+        ], 201);
+    }
+
+    // MOSTRAR UN EMPLEADO POR ID
+    public function show($id)
+    {
+        return response()->json(
+            Empleados::findOrFail($id)
+        );
+    }
+
+    // ACTUALIZAR DATOS DEL EMPLEADO
+    public function update(Request $request, $id)
+    {
+        $empleado = Empleados::findOrFail($id);
+        $data = $request->all();
+
+        // Si se envía una nueva contraseña, encriptarla
+        if (!empty($data['emp_password'])) {
+            $data['emp_password'] = Hash::make($data['emp_password']);
+        } else {
+            // Si no se envía contraseña, removerla del array para no sobreescribir con vacío
+            unset($data['emp_password']);
+        }
+
+        $empleado->update($data);
+
+        return response()->json([
+            'message' => 'Datos del empleado actualizados correctamente',
+            'data' => $empleado
+        ], 200);
+    }
+
+    // ELIMINAR O DAR DE BAJA
+    public function destroy($id)
+    {
+        // En muchos sistemas, en lugar de borrar, se cambia 'emp_estado' a 0 o 'Inactivo'
+        // Pero aquí seguimos con la eliminación física:
+        Empleados::destroy($id);
+
+        return response()->json([
+            'message' => 'Empleado eliminado del sistema'
+        ], 200);
+    }
+}
