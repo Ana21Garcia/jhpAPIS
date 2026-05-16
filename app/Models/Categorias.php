@@ -16,14 +16,10 @@ class Categorias extends Model
      */
     protected $primaryKey = 'id_categoria';
 
-    /**
-     * Indica si el modelo debe tener timestamps de Eloquent.
-     */
+   
     public $timestamps = false;
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+    
     protected $fillable = [
         'cat_nombre',
         'cat_descripcion',

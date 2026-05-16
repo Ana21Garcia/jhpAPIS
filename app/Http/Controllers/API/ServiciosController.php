@@ -11,7 +11,7 @@ class ServiciosController extends Controller
     // LISTAR TODOS LOS SERVICIOS
     public function index()
     {
-        // Si tienes la relación definida en el modelo, puedes usar with('categoria')
+      
         return response()->json(Servicios::all(), 200);
     }
 

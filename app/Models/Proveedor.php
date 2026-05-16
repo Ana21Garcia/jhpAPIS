@@ -6,19 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Proveedor extends Model
 {
-    /**
-     * Tabla del  modelo.
-     */
+   
     protected $table = 'proveedores';
 
-    /**
-     * Clave primaria.
-     */
+    
     protected $primaryKey = 'id';
 
-    /**
-     * 
-     */
     public $timestamps = false;
 
     /**

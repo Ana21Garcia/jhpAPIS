@@ -16,21 +16,15 @@ class Empleados extends Model
      */
     protected $primaryKey = 'id_empleados';
 
-    /**
-     * No se utilizan timestamps automáticos.
-     */
+   
     public $timestamps = false;
 
-    /**
-     * Campos ocultos (útil para la contraseña al convertir a JSON).
-     */
+   
     protected $hidden = [
         'emp_password',
     ];
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+  
     protected $fillable = [
         'emp_nombre',
         'emp_apaterno',

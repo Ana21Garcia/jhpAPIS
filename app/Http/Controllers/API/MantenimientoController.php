@@ -16,9 +16,7 @@ class MantenimientoController extends Controller
         return response()->json($mantenimientos, 200);
     }
 
-    // REGISTRAR UN NUEVO MANTENIMIENTO (Apertura de orden de servicio)
- // App\Http\Controllers\API\MantenimientoController.php
-
+  
 public function store(Request $request)
 {
     // 1. Crear el Mantenimiento

@@ -19,10 +19,7 @@ class Empleado extends Model
      */
     public $timestamps = false;
 
-    /**
-     * Campos asignables
-     */
-    protected $fillable = [
+        protected $fillable = [
         'nombre',
         'apellido_paterno',
         'apellido_materno',

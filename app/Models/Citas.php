@@ -16,14 +16,10 @@ class Citas extends Model
      */
     protected $primaryKey = 'id_cita';
 
-    /**
-     * Timestamps desactivados.
-     */
+  
     public $timestamps = false;
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+ 
     protected $fillable = [
         'id_cliente',
         'id_empleado',

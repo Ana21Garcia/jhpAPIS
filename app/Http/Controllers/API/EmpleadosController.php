@@ -12,7 +12,7 @@ class EmpleadosController extends Controller
     // LISTAR TODOS LOS EMPLEADOS
     public function index()
     {
-        // El campo 'emp_password' no aparecerá gracias al $hidden del modelo
+       
         return response()->json(Empleados::all(), 200);
     }
 
@@ -67,8 +67,7 @@ class EmpleadosController extends Controller
     // ELIMINAR O DAR DE BAJA
     public function destroy($id)
     {
-        // En muchos sistemas, en lugar de borrar, se cambia 'emp_estado' a 0 o 'Inactivo'
-        // Pero aquí seguimos con la eliminación física:
+      
         Empleados::destroy($id);
 
         return response()->json([

@@ -6,24 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Compras extends Model
 {
-    /**
-     * Tabla del modelo.
-     */
+   
     protected $table = 'Compras';
 
-    /**
-     * Clave primaria.
-     */
+   
     protected $primaryKey = 'id_compra';
 
-    /**
-     * Timestamps desactivados.
-     */
     public $timestamps = false;
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+ 
     protected $fillable = [
         'id_proveedor',
         'id_empleado',
@@ -32,9 +23,7 @@ class Compras extends Model
         'com_factura_no',
     ];
 
-    /**
-     * Relaciones
-     */
+    
     public function proveedor()
     {
         return $this->belongsTo(Proveedores::class, 'id_proveedor', 'id_proveedor');

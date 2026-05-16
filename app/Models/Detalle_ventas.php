@@ -16,14 +16,10 @@ class Detalle_ventas extends Model
      */
     protected $primaryKey = 'id_detalle';
 
-    /**
-     * Desactivamos timestamps estándar.
-     */
+    
     public $timestamps = false;
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+   
     protected $fillable = [
         'id_venta',
         'id_producto',

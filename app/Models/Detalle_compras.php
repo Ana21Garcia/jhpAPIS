@@ -11,19 +11,13 @@ class Detalle_compras extends Model
      */
     protected $table = 'Detalle_Compras';
 
-    /**
-     * Clave primaria.
-     */
+  
     protected $primaryKey = 'id_det_compra';
 
-    /**
-     * Timestamps desactivados.
-     */
+    
     public $timestamps = false;
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+   
     protected $fillable = [
         'id_compra',
         'id_producto',

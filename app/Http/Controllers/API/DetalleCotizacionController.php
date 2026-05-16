@@ -8,14 +8,14 @@ use App\Http\Controllers\Controller;
 
 class DetalleCotizacionController extends Controller
 {
-    // Listar todos los detalles (generalmente no se usa solo, pero sirve para debug)
+    // 
     public function index()
     {
         $detalles = Detalle_Cotizaciones::with(['producto', 'servicio'])->get();
         return response()->json($detalles, 200);
     }
 
-    // Agregar una línea (producto o servicio) a la cotización
+    // Agregar una línea  a la cotización
     public function store(Request $request)
     {
         $detalle = Detalle_Cotizaciones::create($request->all());

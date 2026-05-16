@@ -16,15 +16,10 @@ class Cliente extends Model
      */
     protected $primaryKey = 'id_cliente';
 
-    /**
-     * En este caso, dado que usas un TIMESTAMP por defecto en SQL, 
-     * desactivamos el manejo automático de Laravel.
-     */
+   
     public $timestamps = false;
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+   
     protected $fillable = [
         'cli_nombre',
         'cli_apaterno',

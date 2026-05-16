@@ -18,26 +18,19 @@ class Detalle_cotizaciones extends Model
         'det_precio_unitario',
     ];
 
-    /**
-     * Relación con la Cotización padre.
-     */
+   
     public function cotizacion()
     {
         return $this->belongsTo(Cotizaciones::class, 'id_cotizacion', 'id_cotizacion');
     }
 
-    /**
-     * Relación con el Producto (si aplica).
-     */
+  
     public function producto()
     {
         return $this->belongsTo(Producto::class, 'id_producto', 'id_producto');
     }
 
-    /**
-     * Relación con el Servicio (si aplica).
-     */
-    public function servicio()
+      public function servicio()
     {
         return $this->belongsTo(Servicios::class, 'id_servicio', 'id_servicio');
     }

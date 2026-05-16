@@ -21,9 +21,7 @@ class Detalle_mantenimiento_servicios extends Model
      */
     public $timestamps = false;
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+    
     protected $fillable = [
         'id_mantenimiento',
         'id_servicio',

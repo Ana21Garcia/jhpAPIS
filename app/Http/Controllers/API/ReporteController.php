@@ -15,7 +15,7 @@ class ReporteController extends Controller
             $periodo = $request->query('periodo', 'semana');
             $fechaInicio = ($periodo === 'semana') ? Carbon::now()->startOfWeek() : Carbon::now()->startOfMonth();
 
-            // 1. Tendencia de Ventas (SQL puro para evitar fallos de Eloquent)
+            // vents
             $ventas = DB::table('Mantenimiento')
                 ->select(
                     DB::raw('DATE(fecha_inicio) as fecha'), 
@@ -39,7 +39,7 @@ class ReporteController extends Controller
                 ->limit(5)
                 ->get();
 
-            // 3. Totales (Mano de obra desde servicios aplicados)
+            // 3. Totales 
             $manoObra = DB::table('Detalle_Mantenimiento_Servicios')
                 ->join('Mantenimiento', 'Detalle_Mantenimiento_Servicios.id_mantenimiento', '=', 'Mantenimiento.id_mantenimiento')
                 ->where('Mantenimiento.estado_servicio', '=', 'Terminado')

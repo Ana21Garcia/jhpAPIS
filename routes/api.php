@@ -42,8 +42,7 @@ Route::apiResource('clientes', ClienteController::class);
 Route::apiResource('compras', ComprasController::class);
 
 // RUTAS DE CONTROL CAJA
-// Primero la ruta de consulta específica
-
+// Primero la ruta de consulta 
 
 // Luego el recurso general
 Route::get('control_caja/estado', [Control_cajaController::class, 'consultarEstado']);
