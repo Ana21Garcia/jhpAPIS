@@ -16,14 +16,10 @@ class Servicios extends Model
      */
     protected $primaryKey = 'id_servicio';
 
-    /**
-     * Desactivar timestamps si la tabla no tiene created_at y updated_at.
-     */
+   
     public $timestamps = false;
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+    
     protected $fillable = [
         'ser_nombre',
         'ser_descripcion',

@@ -16,14 +16,9 @@ class Proveedores extends Model
      */
     protected $primaryKey = 'id_proveedor';
 
-    /**
-     * No se utilizan timestamps automáticos.
-     */
-    public $timestamps = false;
+        public $timestamps = false;
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+   
     protected $fillable = [
         'prov_nombre',
         'prov_contacto',

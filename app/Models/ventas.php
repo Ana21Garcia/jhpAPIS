@@ -16,14 +16,10 @@ class Ventas extends Model
      */
     protected $primaryKey = 'id_venta';
 
-    /**
-     * Desactivamos timestamps estándar de Laravel.
-     */
+   
     public $timestamps = false;
 
-    /**
-     * Campos habilitados para asignación masiva.
-     */
+    
     protected $fillable = [
         'id_cliente',
         'id_empleado',
