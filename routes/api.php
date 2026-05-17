@@ -17,11 +17,13 @@ use App\Http\Controllers\API\EmpleadosController;
 use App\Http\Controllers\API\MantenimientoController;
 use App\Http\Controllers\API\ProductoController;
 use App\Http\Controllers\API\ProveedoresController;
+use App\Http\Controllers\API\ReporteController;
 use App\Http\Controllers\API\ServiciosController;
 use App\Http\Controllers\API\VentasController;
 use App\Http\Controllers\API\DetalleCotizacionController;
-use App\Http\Controllers\API\ReporteController;
-use App\Models\Detalle_cotizaciones;
+use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\PasswordResetController;
+use App\Http\Controllers\API\UsuarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +37,39 @@ Route::get('/', function () {
     ]);
 });
 
+/*
+|--------------------------------------------------------------------------
+| Rutas de Autenticación (Públicas)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('auth')->group(function () {
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::get('me', [AuthController::class, 'me'])->middleware('auth:sanctum');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas de Recuperación de Contraseña (Públicas)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('password-reset')->group(function () {
+    Route::post('request', [PasswordResetController::class, 'requestReset']);
+    Route::post('validate-token', [PasswordResetController::class, 'validateToken']);
+    Route::post('reset', [PasswordResetController::class, 'resetPassword']);
+    Route::post('change', [PasswordResetController::class, 'changePassword'])->middleware('auth:sanctum');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rutas de Usuarios (Protegidas)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('usuarios', UsuarioController::class);
+    Route::patch('usuarios/{id}/estado', [UsuarioController::class, 'cambiarEstado']);
+});
 
 Route::apiResource('citas', CitasController::class);
 Route::apiResource('clientes', ClienteController::class);

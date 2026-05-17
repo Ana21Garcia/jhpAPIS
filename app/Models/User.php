@@ -6,11 +6,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -36,13 +37,29 @@ class User extends Authenticatable
     /**
      * Get the attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string,string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Ensure passwords are hashed when assigned.
+     */
+    public function setPasswordAttribute($value)
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        if ($value === null) {
+            $this->attributes['password'] = null;
+            return;
+        }
+
+        // If already hashed (starts with $2y$ or $argon), keep it
+        if (is_string($value) && (str_starts_with($value, '$2y$') || str_starts_with($value, '$argon'))) {
+            $this->attributes['password'] = $value;
+            return;
+        }
+
+        $this->attributes['password'] = \Illuminate\Support\Facades\Hash::make($value);
     }
 }

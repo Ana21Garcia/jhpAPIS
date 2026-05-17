@@ -9,17 +9,19 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
-{
-    Schema::create('mantenimiento_productos', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('id_mantenimiento')->constrained('mantenimientos');
-        $table->foreignId('id_producto')->constrained('productos');
-        $table->integer('cantidad');
-        $table->decimal('precio_venta', 10, 2);
-        $table->timestamps();
-    });
-}
+    public function up(): void
+    {
+        if (!Schema::hasTable('mantenimiento_productos')) {
+            Schema::create('mantenimiento_productos', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('id_mantenimiento')->constrained('mantenimientos');
+                $table->foreignId('id_producto')->constrained('productos');
+                $table->integer('cantidad');
+                $table->decimal('precio_venta', 10, 2);
+                $table->timestamps();
+            });
+        }
+    }
 
     /**
      * Reverse the migrations.

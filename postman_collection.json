@@ -1,0 +1,340 @@
+{
+  "info": {
+    "_postman_id": "jhp-api-auth",
+    "name": "JHP API - Autenticación",
+    "description": "Colección completa de endpoints de autenticación y recuperación de contraseña",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Autenticación",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"token\", jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"correo\\\": \\\"admin@jhpapi.com\\\",\\n  \\\"password\\\": \\\"Admin@123\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Registrarse",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"correo\\\": \\\"nuevo@jhpapi.com\\\",\\n  \\\"password\\\": \\\"Nuevo@123\\\",\\n  \\\"password_confirmation\\\": \\\"Nuevo@123\\\",\\n  \\\"nombre\\\": \\\"Nuevo Usuario\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Ver Perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recuperación de Contraseña",
+      "item": [
+        {
+          "name": "Solicitar Recuperación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"correo\\\": \\\"prueba@jhpapi.com\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/password-reset/request",
+              "host": ["{{base_url}}"],
+              "path": ["api", "password-reset", "request"]
+            }
+          }
+        },
+        {
+          "name": "Validar Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"token\\\": \\\"tu_token_aqui\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/password-reset/validate-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "password-reset", "validate-token"]
+            }
+          }
+        },
+        {
+          "name": "Resetear Contraseña",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"token\\\": \\\"tu_token_aqui\\\",\\n  \\\"password\\\": \\\"NewPass@123\\\",\\n  \\\"password_confirmation\\\": \\\"NewPass@123\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/password-reset/reset",
+              "host": ["{{base_url}}"],
+              "path": ["api", "password-reset", "reset"]
+            }
+          }
+        },
+        {
+          "name": "Cambiar Contraseña",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"password_actual\\\": \\\"Admin@123\\\",\\n  \\\"password_nueva\\\": \\\"NuevaPass@123\\\",\\n  \\\"password_nueva_confirmation\\\": \\\"NuevaPass@123\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/password-reset/change",
+              "host": ["{{base_url}}"],
+              "path": ["api", "password-reset", "change"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gestión de Usuarios",
+      "item": [
+        {
+          "name": "Listar Usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "Ver Usuario",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "1"]
+            }
+          }
+        },
+        {
+          "name": "Crear Usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"correo\\\": \\\"usuario@jhpapi.com\\\",\\n  \\\"password\\\": \\\"Password@123\\\",\\n  \\\"tipo_usuario\\\": \\\"Empleado\\\",\\n  \\\"estado\\\": \\\"Activo\\\",\\n  \\\"id_empleado\\\": null\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/usuarios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Usuario",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"correo\\\": \\\"usuario_actualizado@jhpapi.com\\\",\\n  \\\"estado\\\": \\\"Activo\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "1"]
+            }
+          }
+        },
+        {
+          "name": "Cambiar Estado Usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\n  \\\"estado\\\": \\\"Bloqueado\\\"\\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/1/estado",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "1", "estado"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "usuarios", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "default"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "default"
+    }
+  ]
+}
