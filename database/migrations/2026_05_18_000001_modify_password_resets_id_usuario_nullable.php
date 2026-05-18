@@ -15,13 +15,21 @@ return new class extends Migration
             return;
         }
 
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'sqlite') {
+            return;
+        }
+
         try {
             DB::statement('ALTER TABLE password_resets DROP FOREIGN KEY password_resets_id_usuario_foreign');
         } catch (\Exception $e) {
             // Ignore if the foreign key does not exist.
         }
 
-        DB::statement('ALTER TABLE password_resets MODIFY id_usuario BIGINT UNSIGNED NULL');
+        if (in_array($driver, ['mysql', 'mariadb'], true)) {
+            DB::statement('ALTER TABLE password_resets MODIFY id_usuario BIGINT UNSIGNED NULL');
+        }
     }
 
     /**
@@ -30,6 +38,12 @@ return new class extends Migration
     public function down(): void
     {
         if (! Schema::hasTable('password_resets')) {
+            return;
+        }
+
+        $driver = DB::connection()->getDriverName();
+
+        if (! in_array($driver, ['mysql', 'mariadb'], true)) {
             return;
         }
 

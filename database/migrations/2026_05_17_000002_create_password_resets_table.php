@@ -14,7 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('password_resets')) {
             Schema::create('password_resets', function (Blueprint $table) {
                 $table->id('id_reset');
-                $table->unsignedBigInteger('id_usuario');
+                $table->unsignedBigInteger('id_usuario')->nullable();
                 $table->string('token', 255)->unique();
                 $table->string('correo', 100);
                 $table->timestamp('fecha_solicitud')->useCurrent();
