@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -24,9 +23,8 @@ class PasswordResetMail extends Mailable
     {
         $this->usuario = $usuario;
         $this->token = $token;
-        
-        // URL para resetear contraseña (ajusta según tu frontend)
-        $this->resetUrl = env('FRONTEND_URL', 'http://localhost:3000') . '/recuperar-contrasena?token=' . $token;
+        $this->resetUrl = rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/')
+            . '/recuperar-contrasena?token=' . urlencode($token);
     }
 
     /**
@@ -35,8 +33,7 @@ class PasswordResetMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            from: env('MAIL_FROM_ADDRESS', 'anne2jhp@gmail.com'),
-            subject: 'Recuperación de Contraseña - JHP API',
+            subject: 'Token de recuperacion de contrasena - JHP Motos POS',
         );
     }
 
