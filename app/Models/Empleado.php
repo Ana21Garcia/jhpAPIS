@@ -17,22 +17,24 @@ class Empleado extends Model
     /**
      *
      */
-    public $timestamps = false;
+    public $timestamps = true;
 
         protected $fillable = [
-        'nombre',
-        'apellido_paterno',
-        'apellido_materno',
-        'telefono',
-        'correo',
-        'password',
-        'rol',
+        'emp_nombre',
+        'emp_apaterno',
+        'emp_amaterno',
+        'emp_telefono',
+        'emp_direccion',
+        'emp_rol',
+        'emp_usuario',
+        'emp_password',
+        'emp_estado',
     ];
 
     /**
      * Ocultar el password cuando se convierta a array/JSON.
      */
     protected $hidden = [
-        'password',
+        'emp_password',
     ];
 }

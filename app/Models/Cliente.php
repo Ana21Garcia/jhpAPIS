@@ -9,7 +9,7 @@ class Cliente extends Model
     /**
      * Tabla del modelo.
      */
-    protected $table = 'Clientes';
+    protected $table = 'clientes';
 
     /**
      * Clave primaria.
@@ -17,7 +17,7 @@ class Cliente extends Model
     protected $primaryKey = 'id_cliente';
 
    
-    public $timestamps = false;
+    public $timestamps = true;
 
    
     protected $fillable = [

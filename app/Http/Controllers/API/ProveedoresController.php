@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\Proveedores;
+use App\Models\Proveedor;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -11,13 +11,13 @@ class ProveedoresController extends Controller
     // LISTAR TODOS LOS PROVEEDORES
     public function index()
     {
-        return response()->json(Proveedores::all(), 200);
+        return response()->json(Proveedor::all(), 200);
     }
 
     // REGISTRAR UN NUEVO PROVEEDOR
     public function store(Request $request)
     {
-        $proveedor = Proveedores::create($request->all());
+        $proveedor = Proveedor::create($request->all());
 
         return response()->json([
             'message' => 'Proveedor registrado con éxito',
@@ -29,14 +29,14 @@ class ProveedoresController extends Controller
     public function show($id)
     {
         return response()->json(
-            Proveedores::findOrFail($id)
+            Proveedor::findOrFail($id)
         );
     }
 
     // ACTUALIZAR DATOS DEL PROVEEDOR
     public function update(Request $request, $id)
     {
-        $proveedor = Proveedores::findOrFail($id);
+        $proveedor = Proveedor::findOrFail($id);
         $proveedor->update($request->all());
 
         return response()->json([
@@ -48,7 +48,7 @@ class ProveedoresController extends Controller
     // ELIMINAR PROVEEDOR
     public function destroy($id)
     {
-        Proveedores::destroy($id);
+        Proveedor::destroy($id);
 
         return response()->json([
             'message' => 'Proveedor eliminado del sistema'

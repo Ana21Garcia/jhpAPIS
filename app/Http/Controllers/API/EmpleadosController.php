@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\Empleados;
+use App\Models\Empleado;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -13,7 +13,7 @@ class EmpleadosController extends Controller
     public function index()
     {
        
-        return response()->json(Empleados::all(), 200);
+        return response()->json(Empleado::all(), 200);
     }
 
     // CREAR UN NUEVO EMPLEADO
@@ -26,7 +26,7 @@ class EmpleadosController extends Controller
             $data['emp_password'] = Hash::make($data['emp_password']);
         }
 
-        $empleado = Empleados::create($data);
+        $empleado = Empleado::create($data);
 
         return response()->json([
             'message' => 'Empleado registrado con éxito',
@@ -38,14 +38,14 @@ class EmpleadosController extends Controller
     public function show($id)
     {
         return response()->json(
-            Empleados::findOrFail($id)
+            Empleado::findOrFail($id)
         );
     }
 
     // ACTUALIZAR DATOS DEL EMPLEADO
     public function update(Request $request, $id)
     {
-        $empleado = Empleados::findOrFail($id);
+        $empleado = Empleado::findOrFail($id);
         $data = $request->all();
 
         // Si se envía una nueva contraseña, encriptarla
@@ -68,7 +68,7 @@ class EmpleadosController extends Controller
     public function destroy($id)
     {
       
-        Empleados::destroy($id);
+        Empleado::destroy($id);
 
         return response()->json([
             'message' => 'Empleado eliminado del sistema'

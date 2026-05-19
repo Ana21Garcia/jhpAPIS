@@ -10,18 +10,18 @@ class Proveedor extends Model
     protected $table = 'proveedores';
 
     
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'id_proveedor';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     /**
      * Campos.
      */
     protected $fillable = [
-        'nombre',
-        'telefono',
-        'correo',
-        'marca',
-        'ultima_visita',
+        'prov_nombre',
+        'prov_contacto',
+        'prov_telefono',
+        'prov_email',
+        'prov_direccion',
     ];
 }

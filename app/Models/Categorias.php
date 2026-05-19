@@ -9,7 +9,7 @@ class Categorias extends Model
     /**
      * Tabla del modelo.
      */
-    protected $table = 'Categorias';
+    protected $table = 'categorias';
 
     /**
      * Clave primaria.
@@ -17,7 +17,7 @@ class Categorias extends Model
     protected $primaryKey = 'id_categoria';
 
    
-    public $timestamps = false;
+    public $timestamps = true;
 
     
     protected $fillable = [

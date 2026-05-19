@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class Compras extends Model
 {
    
-    protected $table = 'Compras';
+    protected $table = 'compras';
 
    
     protected $primaryKey = 'id_compra';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
  
     protected $fillable = [
@@ -26,12 +26,12 @@ class Compras extends Model
     
     public function proveedor()
     {
-        return $this->belongsTo(Proveedores::class, 'id_proveedor', 'id_proveedor');
+        return $this->belongsTo(Proveedor::class, 'id_proveedor', 'id_proveedor');
     }
 
     public function empleado()
     {
-        return $this->belongsTo(Empleados::class, 'id_empleado', 'id_empleados');
+        return $this->belongsTo(Empleado::class, 'id_empleado', 'id_empleados');
     }
 
     public function detalles()

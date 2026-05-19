@@ -9,7 +9,7 @@ class Producto extends Model
     /**
      * Tabla del modelo.
      */
-    protected $table = 'Producto';
+    protected $table = 'productos';
 
     /**
      * Clave primaria.
@@ -17,7 +17,7 @@ class Producto extends Model
     protected $primaryKey = 'id_producto';
 
     
-    public $timestamps = false;
+    public $timestamps = true;
 
    
     protected $fillable = [
@@ -41,6 +41,6 @@ class Producto extends Model
   
     public function proveedor()
     {
-        return $this->belongsTo(Proveedores::class, 'id_proveedor', 'id_proveedor');
+        return $this->belongsTo(Proveedor::class, 'id_proveedor', 'id_proveedor');
     }
 }

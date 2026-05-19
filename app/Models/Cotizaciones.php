@@ -9,7 +9,7 @@ class Cotizaciones extends Model
     /**
      * Tabla del modelo.
      */
-    protected $table = 'Cotizaciones';
+    protected $table = 'cotizaciones';
 
     /**
      * Clave primaria.
@@ -17,7 +17,7 @@ class Cotizaciones extends Model
     protected $primaryKey = 'id_cotizacion';
 
  
-    public $timestamps = false;
+    public $timestamps = true;
 
     
     protected $fillable = [
@@ -36,7 +36,7 @@ class Cotizaciones extends Model
 
         public function empleado()
     {
-        return $this->belongsTo(Empleados::class, 'id_empleado', 'id_empleados');
+        return $this->belongsTo(Empleado::class, 'id_empleado', 'id_empleados');
     }
 
   

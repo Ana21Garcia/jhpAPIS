@@ -9,7 +9,7 @@ class Servicios extends Model
     /**
      * Tabla del modelo.
      */
-    protected $table = 'Servicios';
+    protected $table = 'servicios';
 
     /**
      * Clave primaria.
@@ -17,7 +17,7 @@ class Servicios extends Model
     protected $primaryKey = 'id_servicio';
 
    
-    public $timestamps = false;
+    public $timestamps = true;
 
     
     protected $fillable = [

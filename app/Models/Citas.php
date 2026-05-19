@@ -9,7 +9,7 @@ class Citas extends Model
     /**
      * Tabla del modelo.
      */
-    protected $table = 'Citas';
+    protected $table = 'citas';
 
     /**
      * Clave primaria.
@@ -17,7 +17,7 @@ class Citas extends Model
     protected $primaryKey = 'id_cita';
 
   
-    public $timestamps = false;
+    public $timestamps = true;
 
  
     protected $fillable = [
@@ -42,6 +42,6 @@ class Citas extends Model
      */
     public function empleado()
     {
-        return $this->belongsTo(Empleados::class, 'id_empleado', 'id_empleados');
+        return $this->belongsTo(Empleado::class, 'id_empleado', 'id_empleados');
     }
 }
