@@ -81,5 +81,17 @@ class EnsureCatalogTables
                 $table->index('pro_stock');
             });
         }
+
+        if (!Schema::hasTable('servicios')) {
+            Schema::create('servicios', function (Blueprint $table) {
+                $table->increments('id_servicio');
+                $table->string('ser_nombre', 100);
+                $table->text('ser_descripcion')->nullable();
+                $table->decimal('ser_precio_mano_obra', 10, 2)->default(0);
+                $table->unsignedInteger('id_categoria')->nullable();
+                $table->timestamps();
+                $table->index('ser_nombre');
+            });
+        }
     }
 }

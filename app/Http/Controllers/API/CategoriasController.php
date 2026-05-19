@@ -19,6 +19,7 @@ class CategoriasController extends Controller
     // CREAR CATEGORÍA
     public function store(Request $request)
     {
+        EnsureCatalogTables::ensure();
         // Se crean los registros usando cat_nombre y cat_descripcion definidos en el fillable
         $categoria = Categorias::create($request->all());
 

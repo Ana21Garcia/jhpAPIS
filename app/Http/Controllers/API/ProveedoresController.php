@@ -19,6 +19,7 @@ class ProveedoresController extends Controller
     // REGISTRAR UN NUEVO PROVEEDOR
     public function store(Request $request)
     {
+        EnsureCatalogTables::ensure();
         $proveedor = Proveedor::create($request->all());
 
         return response()->json([

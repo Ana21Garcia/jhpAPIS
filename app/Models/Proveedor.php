@@ -12,7 +12,7 @@ class Proveedor extends Model
     
     protected $primaryKey = 'id_proveedor';
 
-    public $timestamps = true;
+    public $timestamps = false;
 
     /**
      * Campos.

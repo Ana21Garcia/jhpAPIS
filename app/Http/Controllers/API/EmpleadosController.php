@@ -21,7 +21,9 @@ class EmpleadosController extends Controller
     // CREAR UN NUEVO EMPLEADO
     public function store(Request $request)
     {
+        EnsureCatalogTables::ensure();
         $data = $request->all();
+        $data = $this->normalizarEmpleado($data);
         
         // Encriptar la contraseña antes de guardar
         if (isset($data['emp_password'])) {
@@ -49,6 +51,7 @@ class EmpleadosController extends Controller
     {
         $empleado = Empleado::findOrFail($id);
         $data = $request->all();
+        $data = $this->normalizarEmpleado($data);
 
         // Si se envía una nueva contraseña, encriptarla
         if (!empty($data['emp_password'])) {
@@ -75,5 +78,28 @@ class EmpleadosController extends Controller
         return response()->json([
             'message' => 'Empleado eliminado del sistema'
         ], 200);
+    }
+
+    private function normalizarEmpleado(array $data): array
+    {
+        if (isset($data['emp_apellido_paterno']) && !isset($data['emp_apaterno'])) {
+            $data['emp_apaterno'] = $data['emp_apellido_paterno'];
+        }
+
+        if (isset($data['emp_apellido_materno']) && !isset($data['emp_amaterno'])) {
+            $data['emp_amaterno'] = $data['emp_apellido_materno'];
+        }
+
+        if (isset($data['emp_email']) && !isset($data['emp_usuario'])) {
+            $data['emp_usuario'] = $data['emp_email'];
+        }
+
+        if (isset($data['emp_correo']) && !isset($data['emp_usuario'])) {
+            $data['emp_usuario'] = $data['emp_correo'];
+        }
+
+        unset($data['emp_apellido_paterno'], $data['emp_apellido_materno'], $data['emp_email'], $data['emp_correo']);
+
+        return $data;
     }
 }

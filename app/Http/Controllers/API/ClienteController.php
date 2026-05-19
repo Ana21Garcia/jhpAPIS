@@ -19,6 +19,7 @@ class ClienteController extends Controller
     // CREAR UN NUEVO CLIENTE
     public function store(Request $request)
     {
+        EnsureCatalogTables::ensure();
         $cliente = Cliente::create($request->all());
 
         return response()->json([
