@@ -4,16 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Control_Caja extends Model
+class Control_caja extends Model
 {
     
-    protected $table = 'Control_Caja';
+    protected $table = 'control_cajas';
 
    
     protected $primaryKey = 'id_caja';
 
    
-    public $timestamps = false;
+    public $timestamps = true;
 
    
     protected $fillable = [
@@ -28,6 +28,6 @@ class Control_Caja extends Model
 
     public function empleado()
     {
-        return $this->belongsTo(Empleados::class, 'id_empleado', 'id_empleados');
+        return $this->belongsTo(Empleado::class, 'id_empleado', 'id_empleados');
     }
 }

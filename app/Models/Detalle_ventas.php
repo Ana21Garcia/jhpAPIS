@@ -9,7 +9,7 @@ class Detalle_ventas extends Model
     /**
      * Tabla del modelo.
      */
-    protected $table = 'Detalle_Ventas';
+    protected $table = 'detalle_ventas';
 
     /**
      * Clave primaria.
@@ -17,7 +17,7 @@ class Detalle_ventas extends Model
     protected $primaryKey = 'id_detalle';
 
     
-    public $timestamps = false;
+    public $timestamps = true;
 
    
     protected $fillable = [

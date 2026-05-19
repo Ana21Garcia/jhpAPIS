@@ -12,7 +12,7 @@ class Empleado extends Model
     /**
      * Clave primaria.
      */
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'id_empleados';
 
     /**
      *

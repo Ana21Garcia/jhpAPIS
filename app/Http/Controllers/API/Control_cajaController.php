@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\Control_Caja;
+use App\Models\Control_caja;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
@@ -17,11 +17,11 @@ class Control_cajaController extends Controller
 {
     try {
         // Buscar caja abierta
-        $caja = Control_Caja::where('estado', 'Abierta')->first();
+        $caja = Control_caja::where('estado', 'Abierta')->first();
 
         if ($caja) {
             // Sumar ventas del día para esta caja
-            $ventasHoy = DB::table('Ventas')
+            $ventasHoy = DB::table('ventas')
                 ->where('id_caja', $caja->id_caja)
                 ->sum('ven_total');
             
@@ -40,7 +40,7 @@ class Control_cajaController extends Controller
         }
 
         // Si no hay caja abierta, buscar la última caja cerrada para mostrar histórico
-        $ultimaCaja = Control_Caja::where('estado', 'Cerrada')
+        $ultimaCaja = Control_caja::where('estado', 'Cerrada')
             ->latest('fecha_cierre')
             ->first();
 
@@ -66,7 +66,7 @@ class Control_cajaController extends Controller
     public function index()
     {
         try {
-            $controles = Control_Caja::with('empleado')->get();
+            $controles = Control_caja::with('empleado')->get();
             return response()->json($controles, 200);
         } catch (Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -81,7 +81,7 @@ public function store(Request $request)
         // LÓGICA PARA ABRIR CAJA
         if ($accion === 'abrir') {
             // Verificar si ya hay una caja abierta
-            $cajaAbiertaExistente = Control_Caja::where('estado', 'Abierta')->first();
+            $cajaAbiertaExistente = Control_caja::where('estado', 'Abierta')->first();
             
             if ($cajaAbiertaExistente) {
                 return response()->json([
@@ -100,7 +100,7 @@ public function store(Request $request)
             }
 
             // Crear nueva caja
-            $caja = Control_Caja::create([
+            $caja = Control_caja::create([
                 'monto_inicial'  => $request->monto_inicial,
                 'id_empleado'    => $request->id_empleado ?? 1,
                 'fecha_apertura' => now(),
@@ -118,7 +118,7 @@ public function store(Request $request)
 
         // LÓGICA PARA CERRAR CAJA - CORREGIDA
         if ($accion === 'cerrar') {
-            $cajaAbierta = Control_Caja::where('estado', 'Abierta')->first();
+            $cajaAbierta = Control_caja::where('estado', 'Abierta')->first();
             
             if (!$cajaAbierta) {
                 return response()->json([
@@ -128,7 +128,7 @@ public function store(Request $request)
             }
 
             // Calcular ventas de esta caja - USANDO EL ID_CAJA CORRECTO
-            $ventasHoy = DB::table('Ventas')
+            $ventasHoy = DB::table('ventas')
                 ->where('id_caja', $cajaAbierta->id_caja)
                 ->sum('ven_total');
             
@@ -172,7 +172,7 @@ public function store(Request $request)
     public function show($id)
     {
         try {
-            $caja = Control_Caja::with('empleado')->findOrFail($id);
+            $caja = Control_caja::with('empleado')->findOrFail($id);
             return response()->json($caja, 200);
         } catch (Exception $e) {
             return response()->json(['error' => 'Registro no encontrado'], 404);
@@ -182,7 +182,7 @@ public function store(Request $request)
     public function destroy($id)
     {
         try {
-            $caja = Control_Caja::find($id);
+            $caja = Control_caja::find($id);
             if (!$caja) {
                 return response()->json(['error' => 'Registro no encontrado'], 404);
             }

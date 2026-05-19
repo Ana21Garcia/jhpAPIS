@@ -9,7 +9,7 @@ class Ventas extends Model
     /**
      * Tabla del modelo.
      */
-    protected $table = 'Ventas';
+    protected $table = 'ventas';
 
     /**
      * Clave primaria.
@@ -17,7 +17,7 @@ class Ventas extends Model
     protected $primaryKey = 'id_venta';
 
    
-    public $timestamps = false;
+    public $timestamps = true;
 
     
     protected $fillable = [
@@ -37,11 +37,11 @@ class Ventas extends Model
     }
 
     public function empleado() {
-        return $this->belongsTo(Empleados::class, 'id_empleado', 'id_empleados');
+        return $this->belongsTo(Empleado::class, 'id_empleado', 'id_empleados');
     }
 
     public function caja() {
-        return $this->belongsTo(Control_Caja::class, 'id_caja', 'id_caja');
+        return $this->belongsTo(Control_caja::class, 'id_caja', 'id_caja');
     }
 
     public function detalles() {
