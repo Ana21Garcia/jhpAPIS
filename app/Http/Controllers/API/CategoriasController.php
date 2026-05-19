@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Categorias;
+use App\Support\EnsureCatalogTables;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -11,6 +12,7 @@ class CategoriasController extends Controller
     // LISTAR TODAS LAS CATEGORÍAS
     public function index()
     {
+        EnsureCatalogTables::ensure();
         return response()->json(Categorias::all(), 200);
     }
 

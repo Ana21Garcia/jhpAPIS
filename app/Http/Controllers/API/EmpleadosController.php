@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Empleado;
+use App\Support\EnsureCatalogTables;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +13,7 @@ class EmpleadosController extends Controller
     // LISTAR TODOS LOS EMPLEADOS
     public function index()
     {
+        EnsureCatalogTables::ensure();
        
         return response()->json(Empleado::all(), 200);
     }

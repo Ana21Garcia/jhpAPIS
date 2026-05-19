@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Cliente;
+use App\Support\EnsureCatalogTables;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -11,6 +12,7 @@ class ClienteController extends Controller
     // LISTAR TODOS LOS CLIENTES
     public function index()
     {
+        EnsureCatalogTables::ensure();
         return response()->json(Cliente::all(), 200);
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Producto;
+use App\Support\EnsureCatalogTables;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -11,6 +12,7 @@ class ProductoController extends Controller
     // LISTAR TODOS LOS PRODUCTOS
     public function index()
     {
+        EnsureCatalogTables::ensure();
       
         $productos = Producto::with(['categoria', 'proveedor'])->get();
         return response()->json($productos, 200);

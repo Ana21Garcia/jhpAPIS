@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Proveedor;
+use App\Support\EnsureCatalogTables;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
@@ -11,6 +12,7 @@ class ProveedoresController extends Controller
     // LISTAR TODOS LOS PROVEEDORES
     public function index()
     {
+        EnsureCatalogTables::ensure();
         return response()->json(Proveedor::all(), 200);
     }
 
