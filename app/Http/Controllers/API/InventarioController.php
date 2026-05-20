@@ -57,10 +57,7 @@ class InventarioController extends Controller
         $marca = $data['marca'] ?? $data['pro_marca'] ?? null;
         $categoria = $data['categoria'] ?? $data['pro_categoria'] ?? null;
 
-        $inventario = Inventario::where('codigo_producto', $codigo)
-            ->where('marca', $marca)
-            ->where('categoria', $categoria)
-            ->first();
+        $inventario = Inventario::where('codigo_producto', $codigo)->first();
 
         $cantidad = (int) ($data['stock'] ?? $data['cantidad'] ?? 0);
         $precio = (float) ($data['precio_unitario'] ?? $data['pro_precio_venta'] ?? 0);
