@@ -13,14 +13,14 @@ class ProveedoresController extends Controller
     public function index()
     {
         EnsureCatalogTables::ensure();
-        return response()->json(Proveedor::all(), 200);
+        return response()->json(Proveedor::with('productos')->get(), 200);
     }
 
     // REGISTRAR UN NUEVO PROVEEDOR
     public function store(Request $request)
     {
         EnsureCatalogTables::ensure();
-        $proveedor = Proveedor::create($request->all());
+        $proveedor = Proveedor::create($this->normalizarProveedor($request->all()));
 
         return response()->json([
             'message' => 'Proveedor registrado con éxito',
@@ -32,7 +32,7 @@ class ProveedoresController extends Controller
     public function show($id)
     {
         return response()->json(
-            Proveedor::findOrFail($id)
+            Proveedor::with('productos')->findOrFail($id)
         );
     }
 
@@ -40,7 +40,7 @@ class ProveedoresController extends Controller
     public function update(Request $request, $id)
     {
         $proveedor = Proveedor::findOrFail($id);
-        $proveedor->update($request->all());
+        $proveedor->update($this->normalizarProveedor($request->all()));
 
         return response()->json([
             'message' => 'Información del proveedor actualizada',
@@ -56,5 +56,14 @@ class ProveedoresController extends Controller
         return response()->json([
             'message' => 'Proveedor eliminado del sistema'
         ], 200);
+    }
+
+    private function normalizarProveedor(array $data): array
+    {
+        if (isset($data['productos_sucursal']) && is_string($data['productos_sucursal'])) {
+            $data['productos_sucursal'] = array_values(array_filter(array_map('trim', explode(',', $data['productos_sucursal']))));
+        }
+
+        return $data;
     }
 }

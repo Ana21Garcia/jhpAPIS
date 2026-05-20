@@ -13,6 +13,11 @@ class CotizacionesController extends Controller
     public function index()
     {
         $cotizaciones = Cotizaciones::with(['cliente', 'detalles.producto'])->get();
+        $cotizaciones->each(function ($cotizacion) {
+            $fecha = $cotizacion->cot_fecha ? \Carbon\Carbon::parse($cotizacion->cot_fecha) : now();
+            $vence = $fecha->copy()->addDays((int) ($cotizacion->cot_vigencia_dias ?? 0));
+            $cotizacion->cot_estado = now()->lte($vence) ? 'Vigente' : 'Vencida';
+        });
         return response()->json($cotizaciones, 200);
     }
 
@@ -20,11 +25,18 @@ class CotizacionesController extends Controller
     {
         try {
             return DB::transaction(function () use ($request) {
+                foreach ($request->input('detalles', []) as $item) {
+                    if ((int) ($item['det_cantidad'] ?? 0) <= 0) {
+                        return response()->json(['message' => 'La cotizacion requiere piezas mayores a 0'], 422);
+                    }
+                }
+
                 $cotizacion = Cotizaciones::create([
                     'id_cliente'        => $request->id_cliente,
                     'id_empleado'       => $request->id_empleado ?? 1,
                     'cot_fecha'         => now(),
                     'cot_vigencia_dias' => $request->cot_vigencia_dias ?? 15,
+                    'cot_estado'         => 'Vigente',
                     'cot_total'         => $request->cot_total,
                 ]);
 
@@ -50,10 +62,16 @@ class CotizacionesController extends Controller
         try {
             return DB::transaction(function () use ($request, $id) {
                 $cotizacion = Cotizaciones::findOrFail($id);
+                foreach ($request->input('detalles', []) as $item) {
+                    if ((int) ($item['det_cantidad'] ?? 0) <= 0) {
+                        return response()->json(['message' => 'La cotizacion requiere piezas mayores a 0'], 422);
+                    }
+                }
                 
                 $cotizacion->update([
                     'id_cliente'        => $request->id_cliente,
                     'cot_vigencia_dias' => $request->cot_vigencia_dias,
+                    'cot_estado'         => 'Vigente',
                     'cot_total'         => $request->cot_total,
                 ]);
 

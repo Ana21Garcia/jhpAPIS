@@ -20,9 +20,18 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:8081', 'http://127.0.0.1:8081', 'http://localhost', 'http://127.0.0.1', 'localhost:8081'],
+    'allowed_origins' => [
+        env('FRONTEND_URL', 'http://localhost:8081'),
+        'http://localhost:8081',
+        'http://127.0.0.1:8081',
+        'http://localhost:19006',
+        'http://127.0.0.1:19006',
+    ],
 
-    'allowed_origins_patterns' => ['/localhost/'],
+    'allowed_origins_patterns' => [
+        '#^http://localhost(:[0-9]+)?$#',
+        '#^http://127\.0\.0\.1(:[0-9]+)?$#',
+    ],
 
     'allowed_headers' => ['*'],
 

@@ -2,57 +2,67 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use App\Models\Compras;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 
 class ComprasController extends Controller
 {
-    // LISTAR TODAS LAS COMPRAS
     public function index()
     {
-        // Cargamos las relaciones para tener la información completa
-        $compras = Compras::with(['proveedor', 'empleado', 'detalles'])->get();
-        return response()->json($compras, 200);
+        return response()->json(Compras::with(['proveedor', 'empleado', 'detalles'])->get(), 200);
     }
 
-    // REGISTRAR UNA COMPRA
     public function store(Request $request)
     {
         $compra = Compras::create($request->all());
+        $items = $request->input('detalles', $request->input('productos', []));
+
+        if (empty($items) && ($request->filled('codigo_producto') || $request->filled('productCode'))) {
+            $items = [[
+                'codigo_producto' => $request->input('codigo_producto', $request->input('productCode')),
+                'nombre_producto' => $request->input('nombre_producto', $request->input('productName')),
+                'marca' => $request->input('marca', $request->input('brand')),
+                'categoria' => $request->input('categoria'),
+                'stock' => $request->input('cantidad', $request->input('quantity', 0)),
+                'precio_unitario' => $request->input('precio_unitario', $request->input('unitCost', 0)),
+                'iva' => $request->input('iva', 0),
+                'proveedor' => $request->input('proveedor', $request->input('provider')),
+                'id_proveedor' => $request->input('id_proveedor'),
+                'id_producto' => $request->input('id_producto'),
+            ]];
+        }
+
+        foreach ($items as $item) {
+            InventarioController::sumarOActualizar($item);
+        }
 
         return response()->json([
             'message' => 'Compra registrada correctamente',
-            'data' => $compra
+            'data' => $compra,
         ], 201);
     }
 
-    // MOSTRAR UNA COMPRA ESPECÍFICA CON SUS DETALLES
     public function show($id)
     {
-        $compra = Compras::with(['proveedor', 'empleado', 'detalles'])->findOrFail($id);
-        return response()->json($compra, 200);
+        return response()->json(Compras::with(['proveedor', 'empleado', 'detalles'])->findOrFail($id), 200);
     }
 
-    // ACTUALIZAR UNA COMPRA
     public function update(Request $request, $id)
     {
         $compra = Compras::findOrFail($id);
         $compra->update($request->all());
 
         return response()->json([
-            'message' => 'Información de la compra actualizada',
-            'data' => $compra
+            'message' => 'Informacion de la compra actualizada',
+            'data' => $compra,
         ], 200);
     }
 
-    // ELIMINAR REGISTRO DE COMPRA
     public function destroy($id)
     {
         Compras::destroy($id);
 
-        return response()->json([
-            'message' => 'Registro de compra eliminado'
-        ], 200);
+        return response()->json(['message' => 'Registro de compra eliminado'], 200);
     }
 }

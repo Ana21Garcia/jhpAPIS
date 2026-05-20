@@ -26,9 +26,15 @@ class Empleado extends Model
         'emp_telefono',
         'emp_direccion',
         'emp_rol',
+        'tipo_usuario',
+        'es_mecanico',
         'emp_usuario',
         'emp_password',
         'emp_estado',
+    ];
+
+    protected $casts = [
+        'es_mecanico' => 'boolean',
     ];
 
     /**

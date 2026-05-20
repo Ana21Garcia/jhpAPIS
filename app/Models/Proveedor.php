@@ -23,5 +23,15 @@ class Proveedor extends Model
         'prov_telefono',
         'prov_email',
         'prov_direccion',
+        'productos_sucursal',
     ];
+
+    protected $casts = [
+        'productos_sucursal' => 'array',
+    ];
+
+    public function productos()
+    {
+        return $this->hasMany(Producto::class, 'id_proveedor', 'id_proveedor');
+    }
 }

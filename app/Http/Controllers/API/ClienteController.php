@@ -20,7 +20,7 @@ class ClienteController extends Controller
     public function store(Request $request)
     {
         EnsureCatalogTables::ensure();
-        $cliente = Cliente::create($request->all());
+        $cliente = Cliente::create($this->normalizarCliente($request->all()));
 
         return response()->json([
             'message' => 'Cliente registrado con éxito',
@@ -40,7 +40,7 @@ class ClienteController extends Controller
     public function update(Request $request, $id)
     {
         $cliente = Cliente::findOrFail($id);
-        $cliente->update($request->all());
+        $cliente->update($this->normalizarCliente($request->all()));
 
         return response()->json([
             'message' => 'Datos del cliente actualizados',
@@ -56,5 +56,15 @@ class ClienteController extends Controller
         return response()->json([
             'message' => 'Cliente eliminado del sistema'
         ], 200);
+    }
+
+    private function normalizarCliente(array $data): array
+    {
+        if (isset($data['cli_telefonos_extra']) && is_string($data['cli_telefonos_extra'])) {
+            $data['cli_telefonos_extra'] = array_values(array_filter(array_map('trim', explode(',', $data['cli_telefonos_extra']))));
+        }
+        $data['tipo_usuario'] = $data['tipo_usuario'] ?? 3;
+
+        return $data;
     }
 }

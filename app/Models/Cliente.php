@@ -25,7 +25,13 @@ class Cliente extends Model
         'cli_apaterno',
         'cli_amaterno',
         'cli_telefono',
+        'cli_telefonos_extra',
         'cli_correo',
+        'tipo_usuario',
         'cli_fecha_registro',
+    ];
+
+    protected $casts = [
+        'cli_telefonos_extra' => 'array',
     ];
 }

@@ -98,6 +98,16 @@ class EmpleadosController extends Controller
             $data['emp_usuario'] = $data['emp_correo'];
         }
 
+        if (isset($data['tipo_usuario'])) {
+            $data['tipo_usuario'] = (int) $data['tipo_usuario'];
+        } else {
+            $data['tipo_usuario'] = stripos($data['emp_rol'] ?? '', 'admin') !== false ? 1 : 2;
+        }
+
+        if (isset($data['es_mecanico'])) {
+            $data['es_mecanico'] = filter_var($data['es_mecanico'], FILTER_VALIDATE_BOOLEAN);
+        }
+
         unset($data['emp_apellido_paterno'], $data['emp_apellido_materno'], $data['emp_email'], $data['emp_correo']);
 
         return $data;

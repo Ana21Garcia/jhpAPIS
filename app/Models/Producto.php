@@ -27,7 +27,10 @@ class Producto extends Model
         'pro_marca',
         'pro_descripcion',
         'pro_precio_venta',
+        'pro_iva',
         'pro_stock',
+        'pro_categoria',
+        'pro_proveedor',
         'id_categoria',
         'id_proveedor',
     ];

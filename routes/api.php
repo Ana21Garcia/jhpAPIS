@@ -24,6 +24,7 @@ use App\Http\Controllers\API\DetalleCotizacionController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PasswordResetController;
 use App\Http\Controllers\API\UsuarioController;
+use App\Http\Controllers\API\InventarioController;
 
 /*
 |--------------------------------------------------------------------------
@@ -95,6 +96,8 @@ Route::apiResource('empleados', EmpleadosController::class);
 Route::apiResource('mantenimiento', MantenimientoController::class);
 
 Route::apiResource('producto', ProductoController::class);
+Route::apiResource('inventario', InventarioController::class);
+Route::apiResource('inventarios', InventarioController::class);
 Route::apiResource('proveedores', ProveedoresController::class);
 Route::apiResource('categorias', CategoriasController::class);
 
