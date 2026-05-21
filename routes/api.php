@@ -39,6 +39,13 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('deploy-version', function () {
+    return response()->json([
+        'version' => 'appointments-db-direct-2026-05-21',
+        'commit_hint' => 'Direct DB appointment writes',
+    ]);
+});
+
 /*
 |--------------------------------------------------------------------------
 | Rutas de Autenticación (Públicas)
