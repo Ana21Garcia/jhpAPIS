@@ -146,10 +146,18 @@ public function store(Request $request)
             
             if ($cajaAbiertaExistente) {
                 return response()->json([
-                    'status' => 'error', 
-                    'message' => 'Ya existe una caja abierta',
-                    'caja_actual' => $cajaAbiertaExistente
-                ], 400);
+                    'status' => 'success',
+                    'message' => 'La caja ya estaba abierta',
+                    'data' => $cajaAbiertaExistente,
+                    'ventas_hoy' => number_format($this->ventasCaja($cajaAbiertaExistente->id_caja), 2, '.', ''),
+                    'monto_final_esperado' => number_format(
+                        ((float) $cajaAbiertaExistente->monto_inicial) + $this->ventasCaja($cajaAbiertaExistente->id_caja),
+                        2,
+                        '.',
+                        ''
+                    ),
+                    'caja_abierta' => true,
+                ], 200);
             }
 
             // Validar monto inicial
@@ -163,7 +171,7 @@ public function store(Request $request)
             // Crear nueva caja
             $caja = Control_caja::create([
                 'monto_inicial'  => $request->monto_inicial,
-                'id_empleado'    => $request->id_empleado ?? 1,
+                'id_empleado'    => $request->id_empleado,
                 'fecha_apertura' => now(),
                 'estado'         => 'Abierta'
             ]);

@@ -27,6 +27,11 @@ class EnsureCatalogTables
                 $table->string('cli_amaterno', 50)->nullable();
                 $table->string('cli_telefono', 15)->nullable();
                 $table->string('cli_correo', 100)->nullable();
+                $table->text('cli_direccion')->nullable();
+                $table->string('cli_password', 255)->nullable();
+                $table->json('cli_telefonos_extra')->nullable();
+                $table->unsignedTinyInteger('tipo_usuario')->default(3);
+                $table->enum('cli_estado', ['Activo', 'Inactivo'])->default('Activo');
                 $table->timestamp('cli_fecha_registro')->nullable();
                 $table->timestamps();
                 $table->index('cli_correo');
@@ -54,8 +59,11 @@ class EnsureCatalogTables
                 $table->string('emp_apaterno', 50);
                 $table->string('emp_amaterno', 50)->nullable();
                 $table->string('emp_telefono', 15)->nullable();
+                $table->string('emp_correo', 100)->nullable();
                 $table->text('emp_direccion')->nullable();
                 $table->string('emp_rol', 30)->default('Empleado');
+                $table->unsignedTinyInteger('tipo_usuario')->default(2);
+                $table->boolean('es_mecanico')->default(false);
                 $table->string('emp_usuario', 50)->unique();
                 $table->string('emp_password', 255);
                 $table->string('emp_estado', 20)->default('Activo');

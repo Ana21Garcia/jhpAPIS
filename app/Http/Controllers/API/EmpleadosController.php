@@ -2,81 +2,72 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
+use App\Models\Cliente;
 use App\Models\Empleado;
 use App\Support\EnsureCatalogTables;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class EmpleadosController extends Controller
 {
-    // LISTAR TODOS LOS EMPLEADOS
     public function index()
     {
         EnsureCatalogTables::ensure();
-       
+
         return response()->json(Empleado::all(), 200);
     }
 
-    // CREAR UN NUEVO EMPLEADO
     public function store(Request $request)
     {
         EnsureCatalogTables::ensure();
-        $data = $request->all();
-        $data = $this->normalizarEmpleado($data);
-        
-        // Encriptar la contraseña antes de guardar
+        $data = $this->normalizarEmpleado($request->all());
+
         if (isset($data['emp_password'])) {
             $data['emp_password'] = Hash::make($data['emp_password']);
         }
 
         $empleado = Empleado::create($data);
+        $this->syncCliente($empleado);
 
         return response()->json([
-            'message' => 'Empleado registrado con éxito',
-            'data' => $empleado
+            'message' => 'Empleado registrado con exito',
+            'data' => $empleado,
         ], 201);
     }
 
-    // MOSTRAR UN EMPLEADO POR ID
     public function show($id)
     {
-        return response()->json(
-            Empleado::findOrFail($id)
-        );
+        return response()->json(Empleado::findOrFail($id), 200);
     }
 
-    // ACTUALIZAR DATOS DEL EMPLEADO
     public function update(Request $request, $id)
     {
         $empleado = Empleado::findOrFail($id);
-        $data = $request->all();
-        $data = $this->normalizarEmpleado($data);
+        $data = $this->normalizarEmpleado($request->all());
 
-        // Si se envía una nueva contraseña, encriptarla
         if (!empty($data['emp_password'])) {
             $data['emp_password'] = Hash::make($data['emp_password']);
         } else {
-            // Si no se envía contraseña, removerla del array para no sobreescribir con vacío
             unset($data['emp_password']);
         }
 
         $empleado->update($data);
+        $this->syncCliente($empleado->fresh());
 
         return response()->json([
             'message' => 'Datos del empleado actualizados correctamente',
-            'data' => $empleado
+            'data' => $empleado->fresh(),
         ], 200);
     }
 
-    // ELIMINAR O DAR DE BAJA
     public function destroy($id)
     {
-      
         Empleado::destroy($id);
 
         return response()->json([
-            'message' => 'Empleado eliminado del sistema'
+            'message' => 'Empleado eliminado del sistema',
         ], 200);
     }
 
@@ -90,34 +81,79 @@ class EmpleadosController extends Controller
             $data['emp_amaterno'] = $data['emp_apellido_materno'];
         }
 
-        if (isset($data['emp_email']) && !isset($data['emp_usuario'])) {
-            $data['emp_usuario'] = $data['emp_email'];
+        if (isset($data['emp_email']) && !isset($data['emp_correo'])) {
+            $data['emp_correo'] = $data['emp_email'];
         }
 
         if (isset($data['emp_correo']) && !isset($data['emp_usuario'])) {
             $data['emp_usuario'] = $data['emp_correo'];
         }
 
-        if (isset($data['emp_rol']) && stripos($data['emp_rol'], 'cliente') !== false) {
+        if (isset($data['emp_usuario']) && !isset($data['emp_correo'])) {
+            $data['emp_correo'] = $data['emp_usuario'];
+        }
+
+        $rolOriginal = (string) ($data['emp_rol'] ?? '');
+        $rolNormalizado = strtolower($rolOriginal);
+
+        if ($rolNormalizado !== '') {
+            if (str_contains($rolNormalizado, 'cliente')) {
+                $data['emp_rol'] = 'Vendedor';
+            } elseif (str_contains($rolNormalizado, 'mecanico')) {
+                $data['emp_rol'] = 'Mecanico';
+            } elseif (str_contains($rolNormalizado, 'admin')) {
+                $data['emp_rol'] = 'Administrador';
+            } elseif (str_contains($rolNormalizado, 'empleado') || str_contains($rolNormalizado, 'vendedor')) {
+                $data['emp_rol'] = 'Vendedor';
+            }
+        }
+
+        if ($rolNormalizado !== '' && str_contains($rolNormalizado, 'cliente')) {
             $data['tipo_usuario'] = 3;
-        } elseif (isset($data['emp_rol']) && stripos($data['emp_rol'], 'admin') !== false) {
+        } elseif ($rolNormalizado !== '' && str_contains($rolNormalizado, 'admin')) {
             $data['tipo_usuario'] = 1;
         } elseif (isset($data['tipo_usuario'])) {
             $data['tipo_usuario'] = (int) $data['tipo_usuario'];
         } else {
-            $data['tipo_usuario'] = stripos($data['emp_rol'] ?? '', 'admin') !== false ? 1 : 2;
+            $data['tipo_usuario'] = str_contains($rolNormalizado, 'admin') ? 1 : 2;
         }
 
-        if (isset($data['emp_rol']) && stripos($data['emp_rol'], 'mecanico') !== false) {
-            $data['es_mecanico'] = true;
+        if ($rolNormalizado !== '') {
+            $data['es_mecanico'] = str_contains($rolNormalizado, 'mecanico');
         }
 
         if (isset($data['es_mecanico'])) {
             $data['es_mecanico'] = filter_var($data['es_mecanico'], FILTER_VALIDATE_BOOLEAN);
         }
 
-        unset($data['emp_apellido_paterno'], $data['emp_apellido_materno'], $data['emp_email'], $data['emp_correo']);
+        unset($data['emp_apellido_paterno'], $data['emp_apellido_materno'], $data['emp_email']);
 
-        return $data;
+        return array_filter(
+            $data,
+            fn ($value, $key) => Schema::hasColumn('empleados', $key),
+            ARRAY_FILTER_USE_BOTH
+        );
+    }
+
+    private function syncCliente(Empleado $empleado): void
+    {
+        if ((int) $empleado->tipo_usuario !== 3) {
+            return;
+        }
+
+        Cliente::updateOrCreate(
+            ['cli_correo' => $empleado->emp_correo ?? $empleado->emp_usuario],
+            [
+                'cli_nombre' => $empleado->emp_nombre,
+                'cli_apaterno' => $empleado->emp_apaterno ?? 'Cliente',
+                'cli_amaterno' => $empleado->emp_amaterno,
+                'cli_telefono' => $empleado->emp_telefono,
+                'cli_correo' => $empleado->emp_correo ?? $empleado->emp_usuario,
+                'cli_direccion' => $empleado->emp_direccion,
+                'cli_password' => $empleado->emp_password,
+                'tipo_usuario' => 3,
+                'cli_estado' => $empleado->emp_estado ?? 'Activo',
+            ],
+        );
     }
 }

@@ -12,7 +12,7 @@ class Compras extends Model
    
     protected $primaryKey = 'id_compra';
 
-    public $timestamps = true;
+    public $timestamps = false;
 
  
     protected $fillable = [

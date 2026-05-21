@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Control_caja;
 use App\Models\Detalle_ventas;
 use App\Models\Ventas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class VentasController extends Controller
 {
@@ -27,10 +29,15 @@ class VentasController extends Controller
                 );
             }
 
+            $cajaAbierta = Control_caja::where('estado', 'Abierta')
+                ->latest('id_caja')
+                ->first();
+            $idCaja = $this->resolverIdCajaValido($request->id_caja ?? $cajaAbierta?->id_caja);
+
             $venta = Ventas::create([
                 'id_cliente'  => $request->id_cliente,
-                'id_empleado' => $request->id_empleado ?? 1,
-                'id_caja'     => $request->id_caja ?? 1,
+                'id_empleado' => $request->id_empleado,
+                'id_caja'     => $idCaja,
                 'ven_total'   => $request->ven_total,
                 'tipo_pago'   => $request->tipo_pago,
                 'ven_fecha'   => now(),
@@ -75,5 +82,28 @@ class VentasController extends Controller
         $venta->delete();
 
         return response()->json(['message' => 'Venta eliminada con exito'], 200);
+    }
+
+    private function resolverIdCajaValido($idCaja): ?int
+    {
+        if (!$idCaja) {
+            return null;
+        }
+
+        $idCaja = (int) $idCaja;
+
+        if (Schema::hasTable('control_caja')) {
+            return DB::table('control_caja')->where('id_caja', $idCaja)->exists()
+                ? $idCaja
+                : null;
+        }
+
+        if (Schema::hasTable('control_cajas')) {
+            return DB::table('control_cajas')->where('id_caja', $idCaja)->exists()
+                ? $idCaja
+                : null;
+        }
+
+        return null;
     }
 }

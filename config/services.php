@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'openwa' => [
+        'base_url' => env('OPENWA_BASE_URL', 'http://localhost:2785/api'),
+        'api_key' => env('OPENWA_API_KEY'),
+        'session_id' => env('OPENWA_SESSION_ID'),
+        'country_code' => env('OPENWA_COUNTRY_CODE', '52'),
+    ],
+
 ];

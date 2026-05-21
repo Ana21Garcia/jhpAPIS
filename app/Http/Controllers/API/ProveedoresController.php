@@ -6,6 +6,8 @@ use App\Models\Proveedor;
 use App\Support\EnsureCatalogTables;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProveedoresController extends Controller
 {
@@ -51,10 +53,36 @@ class ProveedoresController extends Controller
     // ELIMINAR PROVEEDOR
     public function destroy($id)
     {
-        Proveedor::destroy($id);
+        DB::transaction(function () use ($id) {
+            if (Schema::hasTable('compras') && Schema::hasColumn('compras', 'id_proveedor')) {
+                DB::table('compras')->where('id_proveedor', $id)->update(['id_proveedor' => null]);
+            }
+
+            if (Schema::hasTable('productos') && Schema::hasColumn('productos', 'id_proveedor')) {
+                $productUpdate = ['id_proveedor' => null];
+                if (Schema::hasColumn('productos', 'pro_proveedor')) {
+                    $productUpdate['pro_proveedor'] = null;
+                }
+
+                DB::table('productos')->where('id_proveedor', $id)->update($productUpdate);
+            }
+
+            if (Schema::hasTable('inventarios') && Schema::hasColumn('inventarios', 'id_proveedor')) {
+                $inventoryUpdate = ['id_proveedor' => null];
+                if (Schema::hasColumn('inventarios', 'proveedor')) {
+                    $inventoryUpdate['proveedor'] = null;
+                }
+
+                DB::table('inventarios')
+                    ->where('id_proveedor', $id)
+                    ->update($inventoryUpdate);
+            }
+
+            Proveedor::findOrFail($id)->delete();
+        });
 
         return response()->json([
-            'message' => 'Proveedor eliminado del sistema'
+            'message' => 'El proveedor se elimino correctamente'
         ], 200);
     }
 

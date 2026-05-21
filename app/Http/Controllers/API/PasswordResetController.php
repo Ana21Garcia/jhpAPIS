@@ -5,6 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Usuario;
 use App\Models\User;
+use App\Models\Empleado;
+use App\Models\Cliente;
 use Illuminate\Support\Facades\Schema;
 use App\Models\PasswordReset;
 use Illuminate\Http\Request;
@@ -47,7 +49,7 @@ class PasswordResetController extends Controller
             }
 
             // Crear solicitud de recuperación
-            $recipientEmail = $usuario instanceof Usuario ? $usuario->correo : $usuario->email;
+            $recipientEmail = $this->emailForPasswordResetUser($usuario);
 
             $passwordReset = PasswordReset::crearSolicitud(
                 $usuario instanceof Usuario ? $usuario->id_usuario : null,
@@ -201,12 +203,27 @@ class PasswordResetController extends Controller
             }
             $userModel = $userQuery->first();
             $usuarioModel = $passwordReset->usuario; // may be null
+            $empleadoModel = Empleado::where('emp_correo', $passwordReset->correo)->first();
+            $clienteModel = Cliente::where('cli_correo', $passwordReset->correo)->first();
 
-            if (!$userModel && !$usuarioModel) {
+            if (!$userModel && !$usuarioModel && !$empleadoModel && !$clienteModel) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no encontrado',
                 ], 404);
+            }
+
+            $currentHash = $userModel?->password
+                ?? $usuarioModel?->password
+                ?? $empleadoModel?->emp_password
+                ?? $clienteModel?->cli_password
+                ?? null;
+
+            if ($currentHash && Hash::check($request->password, $currentHash)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La nueva contrasena no puede ser igual a la contrasena anterior',
+                ], 422);
             }
 
             // Actualizar contraseña
@@ -241,6 +258,16 @@ class PasswordResetController extends Controller
                 if ($usuarioModel instanceof \App\Models\Usuario) {
                     $usuarioModel->password = $request->password;
                     $usuarioModel->save();
+                }
+
+                if ($empleadoModel) {
+                    $empleadoModel->emp_password = Hash::make($request->password);
+                    $empleadoModel->save();
+                }
+
+                if ($clienteModel) {
+                    $clienteModel->cli_password = Hash::make($request->password);
+                    $clienteModel->save();
                 }
             } catch (\Exception $e) {
                 \Log::error('Error actualizando contraseña: ' . $e->getMessage());
@@ -282,7 +309,23 @@ class PasswordResetController extends Controller
             $userQuery->orWhere('correo', $correo);
         }
 
-        return $userQuery->first();
+        if ($user = $userQuery->first()) {
+            return $user;
+        }
+
+        if ($empleado = Empleado::where('emp_correo', $correo)->first()) {
+            return $empleado;
+        }
+
+        return Cliente::where('cli_correo', $correo)->first();
+    }
+
+    private function emailForPasswordResetUser($usuario): string
+    {
+        return $usuario->correo
+            ?? $usuario->email
+            ?? $usuario->emp_correo
+            ?? $usuario->cli_correo;
     }
 
     /**

@@ -5,13 +5,14 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Inventario;
 use App\Models\Producto;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 
 class InventarioController extends Controller
 {
     public function index()
     {
-        return response()->json(Inventario::with('producto')->orderBy('nombre_producto')->get(), 200);
+        return response()->json(Inventario::with('producto')->orderBy('id_inventario')->get(), 200);
     }
 
     public function store(Request $request)
@@ -35,7 +36,25 @@ class InventarioController extends Controller
         $inventario = Inventario::findOrFail($id);
         $data = $this->normalizar($request->all());
         $data['precio_total'] = ((float) ($data['precio_unitario'] ?? $inventario->precio_unitario)) + ((float) ($data['iva'] ?? $inventario->iva));
-        $inventario->update($data);
+
+        if ($this->hasDuplicateInventory($data, (int) $id)) {
+            return response()->json([
+                'message' => 'Ya existe un producto de inventario con ese codigo, marca y categoria.',
+            ], 422);
+        }
+
+        try {
+            $inventario->update($data);
+        } catch (QueryException $exception) {
+            if ($exception->getCode() === '23000') {
+                return response()->json([
+                    'message' => 'Ya existe un producto de inventario con ese codigo, marca y categoria.',
+                ], 422);
+            }
+
+            throw $exception;
+        }
+
         $this->syncProducto($inventario);
 
         return response()->json([
@@ -57,7 +76,10 @@ class InventarioController extends Controller
         $marca = $data['marca'] ?? $data['pro_marca'] ?? null;
         $categoria = $data['categoria'] ?? $data['pro_categoria'] ?? null;
 
-        $inventario = Inventario::where('codigo_producto', $codigo)->first();
+        $inventario = Inventario::where('codigo_producto', $codigo)
+            ->where('marca', $marca)
+            ->where('categoria', $categoria)
+            ->first();
 
         $cantidad = (int) ($data['stock'] ?? $data['cantidad'] ?? 0);
         $precio = (float) ($data['precio_unitario'] ?? $data['pro_precio_venta'] ?? 0);
@@ -153,5 +175,14 @@ class InventarioController extends Controller
             'pro_categoria' => $inventario->categoria,
             'pro_proveedor' => $inventario->proveedor,
         ]);
+    }
+
+    private function hasDuplicateInventory(array $data, int $currentId): bool
+    {
+        return Inventario::where('codigo_producto', $data['codigo_producto'])
+            ->where('marca', $data['marca'])
+            ->where('categoria', $data['categoria'])
+            ->where('id_inventario', '!=', $currentId)
+            ->exists();
     }
 }

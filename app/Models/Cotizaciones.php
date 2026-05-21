@@ -25,6 +25,7 @@ class Cotizaciones extends Model
         'id_empleado',
         'cot_fecha',
         'cot_vigencia_dias',
+        'cot_estado',
         'cot_total',
     ];
 

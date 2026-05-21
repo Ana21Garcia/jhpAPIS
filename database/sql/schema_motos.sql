@@ -1,9 +1,9 @@
--- Script SQL para crear todas las tablas en la base de datos 'motos'
+-- Script SQL para crear todas las tablas en la base de datos 'jhp'
 -- Este script contiene todas las tablas del sistema JHP API
 
 -- Crear base de datos si no existe
-CREATE DATABASE IF NOT EXISTS motos CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE motos;
+CREATE DATABASE IF NOT EXISTS jhp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE jhp;
 
 -- Tabla de Categorías
 CREATE TABLE IF NOT EXISTS categorias (

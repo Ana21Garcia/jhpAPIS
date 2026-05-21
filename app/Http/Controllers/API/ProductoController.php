@@ -6,21 +6,42 @@ use App\Http\Controllers\Controller;
 use App\Models\Producto;
 use App\Support\EnsureCatalogTables;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 
 class ProductoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         EnsureCatalogTables::ensure();
 
-        return response()->json(Producto::with(['categoria', 'proveedor'])->get(), 200);
+        $query = Producto::with(['categoria', 'proveedor']);
+        if ($request->filled('search')) {
+            $search = $request->query('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('pro_codigo', 'LIKE', "%{$search}%")
+                    ->orWhere('pro_nombre', 'LIKE', "%{$search}%")
+                    ->orWhere('pro_marca', 'LIKE', "%{$search}%")
+                    ->orWhere('pro_tipo', 'LIKE', "%{$search}%");
+            });
+        }
+
+        return response()->json($query->orderBy('pro_nombre')->get(), 200);
     }
 
     public function store(Request $request)
     {
         EnsureCatalogTables::ensure();
-        $producto = Producto::create($this->normalizarProducto($request->all()));
-        $this->syncInventario($producto, (int) $producto->pro_stock);
+        try {
+            $producto = Producto::create($this->normalizarProducto($request->all()));
+            $this->syncInventario($producto, (int) $producto->pro_stock);
+        } catch (QueryException $e) {
+            if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
+                return response()->json([
+                    'message' => 'Ya existe un producto registrado con ese codigo.',
+                ], 422);
+            }
+            throw $e;
+        }
 
         return response()->json([
             'message' => 'Producto registrado exitosamente',
@@ -50,6 +71,33 @@ class ProductoController extends Controller
         Producto::destroy($id);
 
         return response()->json(['message' => 'Producto eliminado del inventario'], 200);
+    }
+
+    public function search(Request $request)
+    {
+        EnsureCatalogTables::ensure();
+        $search = $request->query('q', $request->query('search', ''));
+
+        if (!trim($search)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Termino de busqueda requerido',
+            ], 422);
+        }
+
+        $productos = Producto::with(['categoria', 'proveedor'])
+            ->where('pro_codigo', 'LIKE', "%{$search}%")
+            ->orWhere('pro_nombre', 'LIKE', "%{$search}%")
+            ->orWhere('pro_marca', 'LIKE', "%{$search}%")
+            ->orWhere('pro_tipo', 'LIKE', "%{$search}%")
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $productos,
+            'total' => $productos->count(),
+        ], 200);
     }
 
     private function normalizarProducto(array $data): array

@@ -52,6 +52,13 @@ class PasswordReset extends Model
      */
     public static function crearSolicitud($idUsuario, $correo, $request = null)
     {
+        self::where('correo', $correo)
+            ->where('utilizado', false)
+            ->update([
+                'utilizado' => true,
+                'fecha_uso' => now(),
+            ]);
+
         $token = self::generateToken();
         $horasExpiracion = 24; // Token válido por 24 horas
 

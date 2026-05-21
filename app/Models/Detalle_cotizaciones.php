@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Detalle_cotizaciones extends Model
 {
-    protected $table = 'Detalle_Cotizaciones';
-    protected $primaryKey = 'id_det_cotizacion';
+    protected $table = 'detalle_cotizaciones';
+    protected $primaryKey = 'id_detalle_cotizacion';
     public $timestamps = false;
 
     protected $fillable = [

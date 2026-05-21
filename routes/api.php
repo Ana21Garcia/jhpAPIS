@@ -25,6 +25,7 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\PasswordResetController;
 use App\Http\Controllers\API\UsuarioController;
 use App\Http\Controllers\API\InventarioController;
+use App\Http\Controllers\API\WhatsAppController;
 
 /*
 |--------------------------------------------------------------------------
@@ -95,6 +96,7 @@ Route::apiResource('detalle_ventas', Detalle_ventasController::class);
 Route::apiResource('empleados', EmpleadosController::class);
 Route::apiResource('mantenimiento', MantenimientoController::class);
 
+Route::get('producto/search', [ProductoController::class, 'search']);
 Route::apiResource('producto', ProductoController::class);
 Route::apiResource('inventario', InventarioController::class);
 Route::apiResource('inventarios', InventarioController::class);
@@ -105,4 +107,7 @@ Route::apiResource('servicios', ServiciosController::class);
 Route::apiResource('ventas',VentasController::class);
 Route::apiResource('detalle_cotizaciones',DetalleCotizacionController::class);
 
+Route::get('reportes/mas-solicitados', [ReporteController::class, 'masSolicitados']);
+Route::get('reportes/dashboard-graficas', [ReporteController::class, 'dashboardGraficas']);
 Route::get('reportes-detallados', [ReporteController::class, 'datosGraficas']);
+Route::post('whatsapp/citas', [WhatsAppController::class, 'enviarCita']);
