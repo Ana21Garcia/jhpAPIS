@@ -15,14 +15,18 @@ class PasswordResetMail extends Mailable
     public $usuario;
     public $token;
     public $resetUrl;
+    public $accountEmail;
+    public $deliveryEmail;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($usuario, $token)
+    public function __construct($usuario, $token, ?string $accountEmail = null, ?string $deliveryEmail = null)
     {
         $this->usuario = $usuario;
         $this->token = $token;
+        $this->accountEmail = $accountEmail;
+        $this->deliveryEmail = $deliveryEmail;
         $this->resetUrl = rtrim(env('FRONTEND_URL', 'http://localhost:3000'), '/')
             . '/recuperar-contrasena?token=' . urlencode($token);
     }
@@ -48,6 +52,8 @@ class PasswordResetMail extends Mailable
                 'usuario' => $this->usuario,
                 'resetUrl' => $this->resetUrl,
                 'token' => $this->token,
+                'accountEmail' => $this->accountEmail,
+                'deliveryEmail' => $this->deliveryEmail,
             ],
         );
     }

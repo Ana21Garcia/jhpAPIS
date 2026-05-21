@@ -72,9 +72,23 @@ class ReporteController extends Controller
                     'estado' => (int) $item->stock <= 0 ? 'SIN STOCK' : 'BAJO',
                 ]);
 
+            $citas = Schema::hasTable('citas')
+                ? DB::table('citas')->select('cita_estado')->get()
+                : collect();
+
+            $mantenimientoTable = $this->existingTable(['mantenimiento', 'Mantenimiento', 'mantenimientos']);
+            $mantenimientos = $mantenimientoTable && Schema::hasColumn($mantenimientoTable, 'estado_servicio')
+                ? DB::table($mantenimientoTable)->select('estado_servicio')->get()
+                : collect();
+
             return response()->json([
                 'tendencia' => $tendencia,
                 'top_productos' => $topProductos,
+                'resumen' => [
+                    'ventas_registradas' => Schema::hasTable('ventas') ? DB::table('ventas')->count() : 0,
+                    'citas_pendientes' => $citas->filter(fn ($item) => $this->isPendingStatus($item->cita_estado ?? null))->count(),
+                    'servicios_pendientes' => $mantenimientos->filter(fn ($item) => $this->isPendingStatus($item->estado_servicio ?? null))->count(),
+                ],
                 'inventario' => [
                     'total' => $totalInventario,
                     'ok' => $stockOk,
@@ -89,6 +103,32 @@ class ReporteController extends Controller
                 'detalle' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    private function existingTable(array $candidates): ?string
+    {
+        foreach ($candidates as $table) {
+            if (Schema::hasTable($table)) {
+                return $table;
+            }
+        }
+
+        return null;
+    }
+
+    private function isPendingStatus($value): bool
+    {
+        $status = strtolower((string) $value);
+
+        if ($status === '') {
+            return false;
+        }
+
+        if (preg_match('/cancel|final|termin|complet|cerrad|vencid|entreg/', $status)) {
+            return false;
+        }
+
+        return (bool) preg_match('/pend|confirm|proceso|program|agend|activo|abiert/', $status);
     }
 
     public function masSolicitados(Request $request)

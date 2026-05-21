@@ -49,24 +49,32 @@ class PasswordResetController extends Controller
             }
 
             // Crear solicitud de recuperación
-            $recipientEmail = $this->emailForPasswordResetUser($usuario);
+            $accountEmail = $this->emailForPasswordResetUser($usuario);
+            $deliveryEmail = $this->passwordResetDeliveryEmail();
 
             $passwordReset = PasswordReset::crearSolicitud(
                 $usuario instanceof Usuario ? $usuario->id_usuario : null,
-                $recipientEmail,
+                $accountEmail,
                 $request
             );
 
             // Enviar email con token
 
             try {
-                Mail::to($recipientEmail)
-                    ->send(new PasswordResetMail($usuario, $passwordReset->token));
+                Mail::to($deliveryEmail)
+                    ->send(new PasswordResetMail($usuario, $passwordReset->token, $accountEmail, $deliveryEmail));
+
+                \Log::info('Correo de recuperacion enviado', [
+                    'correo_cuenta' => $accountEmail,
+                    'correo_entrega' => $deliveryEmail,
+                    'mailer' => config('mail.default'),
+                ]);
             } catch (\Exception $mailException) {
                 $mailError = $mailException->getMessage();
                 \Log::error('Error enviando email de recuperación: ' . $mailError);
                 \Log::error('Configuracion SMTP usada al fallar envio', [
-                    'correo' => $recipientEmail,
+                    'correo_cuenta' => $accountEmail,
+                    'correo_entrega' => $deliveryEmail,
                     'mailer' => config('mail.default'),
                     'host' => config('mail.mailers.smtp.host'),
                     'port' => config('mail.mailers.smtp.port'),
@@ -79,6 +87,8 @@ class PasswordResetController extends Controller
                     'debug_info' => config('app.debug') ? [
                         'token_created' => true,
                         'mail_sent' => false,
+                        'correo_cuenta' => $accountEmail,
+                        'correo_entrega' => $deliveryEmail,
                         'mail_error' => $mailError,
                     ] : null,
                 ], 500);
@@ -91,12 +101,13 @@ class PasswordResetController extends Controller
                     'token_created' => true,
                     'token_expires_in_hours' => 24,
                     'mail_sent' => true,
+                    'correo_cuenta' => $accountEmail,
+                    'correo_entrega' => $deliveryEmail,
                 ],
             ];
 
             if (config('app.debug')) {
                 $response['debug_info']['token'] = $passwordReset->token;
-                $response['debug_info']['correo'] = $recipientEmail;
             }
 
             return response()->json($response, 200);
@@ -326,6 +337,11 @@ class PasswordResetController extends Controller
             ?? $usuario->email
             ?? $usuario->emp_correo
             ?? $usuario->cli_correo;
+    }
+
+    private function passwordResetDeliveryEmail(): string
+    {
+        return env('PASSWORD_RESET_DELIVERY_EMAIL', 'anne2jhp@gmail.com');
     }
 
     /**

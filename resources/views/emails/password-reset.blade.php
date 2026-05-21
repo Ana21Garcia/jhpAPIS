@@ -24,6 +24,11 @@
                             <p style="margin:0 0 22px;font-size:16px;line-height:1.6;color:#456071;">
                                 Recibimos una solicitud para restablecer la contrasena de tu cuenta. Usa el siguiente token en la pantalla de recuperacion del sistema.
                             </p>
+                            @if(!empty($accountEmail))
+                                <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#6d8390;">
+                                    Cuenta solicitante: <strong style="color:#15323f;">{{ $accountEmail }}</strong>
+                                </p>
+                            @endif
 
                             <div style="background:#f8fbfc;border:1px solid #d8e3e8;border-radius:10px;padding:22px;text-align:center;margin:24px 0;">
                                 <div style="font-size:13px;font-weight:700;text-transform:uppercase;color:#6d8390;margin-bottom:10px;">Token de recuperacion</div>
