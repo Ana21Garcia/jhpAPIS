@@ -36,8 +36,12 @@ class ClienteController extends Controller
             $query->where('cli_estado', $request->estado);
         }
 
-        $clientes = $query->orderBy('cli_apaterno')
-                          ->orderBy('cli_nombre')
+        $orderColumn = Schema::hasColumn('clientes', 'cli_fecha_registro')
+            ? 'cli_fecha_registro'
+            : (Schema::hasColumn('clientes', 'created_at') ? 'created_at' : 'id_cliente');
+
+        $clientes = $query->orderByDesc($orderColumn)
+                          ->orderByDesc('id_cliente')
                           ->paginate($request->per_page ?? 15);
 
         return response()->json([
