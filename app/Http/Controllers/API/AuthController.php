@@ -29,6 +29,12 @@ class AuthController extends Controller
                 ], 422);
             }
 
+            if ($this->isConfiguredAdminLogin($request->correo, $request->password)) {
+                $usuario = $this->ensureConfiguredAdminUser($request->correo, $request->password);
+
+                return $this->loginResponse($usuario, 'user');
+            }
+
             $resultadoAuth = $this->findAuthUser($request->correo);
 
             if (!$resultadoAuth || !$this->verifyPassword($resultadoAuth['usuario'], $request->password)) {
@@ -38,8 +44,17 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            $usuario = $resultadoAuth['usuario'];
-            $tipoUsuario = $resultadoAuth['tipo'];
+            return $this->loginResponse($resultadoAuth['usuario'], $resultadoAuth['tipo']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error en el servidor: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function loginResponse($usuario, string $tipoUsuario)
+    {
             $rol = 'Cliente';
             $nombreCompleto = $usuario->nombre_completo ?? $usuario->cli_nombre ?? $usuario->name ?? 'Usuario';
             $userId = $usuario->id_cliente ?? $usuario->id;
@@ -75,12 +90,6 @@ class AuthController extends Controller
                     ],
                 ],
             ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error en el servidor: ' . $e->getMessage(),
-            ], 500);
-        }
     }
 
     private function findAuthUser(string $correo): ?array
@@ -125,6 +134,28 @@ class AuthController extends Controller
         }
 
         return null;
+    }
+
+    private function isConfiguredAdminLogin(string $correo, string $password): bool
+    {
+        return hash_equals(env('JHP_ADMIN_EMAIL', 'anne2jhp@gmail.com'), $correo)
+            && hash_equals(env('JHP_ADMIN_PASSWORD', 'Sailor21$'), $password);
+    }
+
+    private function ensureConfiguredAdminUser(string $correo, string $password): User
+    {
+        $user = User::firstOrNew(['email' => $correo]);
+        $user->name = $user->name ?: env('JHP_ADMIN_NAME', 'Anne JHP');
+        $user->email = $correo;
+        $user->password = $password;
+
+        if (!$user->email_verified_at) {
+            $user->email_verified_at = now();
+        }
+
+        $user->save();
+
+        return $user;
     }
 
     private function verifyPassword($usuario, string $password): bool
