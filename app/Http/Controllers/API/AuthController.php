@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Cliente;
 use App\Models\Empleado;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -40,15 +41,20 @@ class AuthController extends Controller
             $usuario = $resultadoAuth['usuario'];
             $tipoUsuario = $resultadoAuth['tipo'];
             $rol = 'Cliente';
-            $nombreCompleto = $usuario->nombre_completo ?: $usuario->cli_nombre;
-            $userId = $usuario->id_cliente;
-            $correo = $usuario->cli_correo;
+            $nombreCompleto = $usuario->nombre_completo ?? $usuario->cli_nombre ?? $usuario->name ?? 'Usuario';
+            $userId = $usuario->id_cliente ?? $usuario->id;
+            $correo = $usuario->cli_correo ?? $usuario->email;
 
             if ($tipoUsuario === 'empleado') {
                 $rol = $usuario->emp_rol;
                 $nombreCompleto = $usuario->nombre_completo ?: $usuario->emp_nombre;
                 $userId = $usuario->id_empleados;
                 $correo = $usuario->emp_correo ?: $usuario->emp_usuario;
+            } elseif ($tipoUsuario === 'user') {
+                $rol = 'Admin';
+                $nombreCompleto = $usuario->name;
+                $userId = $usuario->id;
+                $correo = $usuario->email;
             }
 
             $token = $usuario->createToken('auth_token')->plainTextToken;
@@ -79,6 +85,12 @@ class AuthController extends Controller
 
     private function findAuthUser(string $correo): ?array
     {
+        $user = User::where('email', $correo)->first();
+
+        if ($user) {
+            return ['usuario' => $user, 'tipo' => 'user'];
+        }
+
         $empleado = Empleado::where(function ($query) use ($correo) {
             $query->where('emp_correo', $correo);
             if (Schema::hasColumn('empleados', 'emp_usuario')) {
@@ -103,7 +115,7 @@ class AuthController extends Controller
 
     private function verifyPassword($usuario, string $password): bool
     {
-        $stored = $usuario->emp_password ?? $usuario->cli_password ?? null;
+        $stored = $usuario->emp_password ?? $usuario->cli_password ?? $usuario->password ?? null;
 
         if (!$stored) {
             return false;
@@ -114,7 +126,9 @@ class AuthController extends Controller
         }
 
         if ($stored === $password) {
-            $campo = isset($usuario->emp_password) ? 'emp_password' : 'cli_password';
+            $campo = isset($usuario->emp_password)
+                ? 'emp_password'
+                : (isset($usuario->cli_password) ? 'cli_password' : 'password');
             $usuario->$campo = Hash::make($password);
             $usuario->save();
             return true;
