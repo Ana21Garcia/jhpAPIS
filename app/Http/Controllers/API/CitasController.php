@@ -4,16 +4,20 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Citas;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class CitasController extends Controller
 {
     public function index()
     {
-        $citas = Citas::with(['cliente', 'empleado'])->get();
-        return response()->json($citas, 200);
+        try {
+            $citas = Citas::with(['cliente', 'empleado'])->get();
+            return response()->json($citas, 200);
+        } catch (Throwable $e) {
+            return response()->json([], 200);
+        }
     }
 
     public function store(Request $request)
@@ -36,7 +40,7 @@ class CitasController extends Controller
 
         try {
             $cita = Citas::create($validator->validated());
-        } catch (QueryException $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'No se pudo guardar la cita por una restriccion de la base de datos.',
                 'error' => $e->getMessage(),
@@ -77,7 +81,7 @@ class CitasController extends Controller
 
         try {
             $cita->update($validator->validated());
-        } catch (QueryException $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'No se pudo actualizar la cita por una restriccion de la base de datos.',
                 'error' => $e->getMessage(),

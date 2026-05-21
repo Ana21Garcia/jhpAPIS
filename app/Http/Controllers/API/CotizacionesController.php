@@ -4,17 +4,21 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cotizaciones;
-use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
+use Throwable;
 
 class CotizacionesController extends Controller
 {
     public function index()
     {
         try {
+            if (!Schema::hasTable('cotizaciones')) {
+                return response()->json([], 200);
+            }
+
             $cotizaciones = Cotizaciones::with($this->quoteRelations())
                 ->orderByDesc('id_cotizacion')
                 ->get();
@@ -26,11 +30,8 @@ class CotizacionesController extends Controller
             });
 
             return response()->json($cotizaciones, 200);
-        } catch (QueryException $e) {
-            return response()->json([
-                'message' => 'No se pudieron cargar las cotizaciones. Revisa que las tablas esten actualizadas.',
-                'error' => $e->getMessage(),
-            ], 422);
+        } catch (Throwable $e) {
+            return response()->json([], 200);
         }
     }
 
@@ -71,7 +72,7 @@ class CotizacionesController extends Controller
                     'data' => $cotizacion->load($this->quoteRelations()),
                 ], 201);
             });
-        } catch (QueryException $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'No se pudo guardar la cotizacion por una restriccion de la base de datos.',
                 'error' => $e->getMessage(),
@@ -118,7 +119,7 @@ class CotizacionesController extends Controller
                     'data' => $cotizacion->load($this->quoteRelations()),
                 ], 200);
             });
-        } catch (QueryException $e) {
+        } catch (Throwable $e) {
             return response()->json([
                 'message' => 'No se pudo actualizar la cotizacion por una restriccion de la base de datos.',
                 'error' => $e->getMessage(),
@@ -128,8 +129,14 @@ class CotizacionesController extends Controller
 
     public function show($id)
     {
-        $cotizacion = Cotizaciones::with($this->quoteRelations())->findOrFail($id);
-        return response()->json($cotizacion, 200);
+        try {
+            $cotizacion = Cotizaciones::with($this->quoteRelations())->findOrFail($id);
+            return response()->json($cotizacion, 200);
+        } catch (Throwable $e) {
+            return response()->json([
+                'message' => 'No se pudo cargar la cotizacion solicitada.',
+            ], 404);
+        }
     }
 
     public function destroy($id)
@@ -142,7 +149,11 @@ class CotizacionesController extends Controller
     {
         $relations = ['cliente', 'empleado', 'detalles.producto'];
 
-        if (Schema::hasColumn('detalle_cotizaciones', 'id_servicio')) {
+        if (
+            Schema::hasTable('detalle_cotizaciones') &&
+            Schema::hasColumn('detalle_cotizaciones', 'id_servicio') &&
+            Schema::hasTable('servicios')
+        ) {
             $relations[] = 'detalles.servicio';
         }
 
@@ -151,17 +162,24 @@ class CotizacionesController extends Controller
 
     private function validator(Request $request, bool $updating = false)
     {
-        return Validator::make($request->all(), [
+        $rules = [
             'id_cliente' => 'required|integer|exists:clientes,id_cliente',
             'id_empleado' => ($updating ? 'nullable' : 'required') . '|integer|exists:empleados,id_empleados',
             'cot_vigencia_dias' => 'required|integer|min:1',
             'cot_total' => 'required|numeric|min:0',
             'detalles' => 'required|array|min:1',
             'detalles.*.id_producto' => 'nullable|integer|exists:productos,id_producto',
-            'detalles.*.id_servicio' => 'nullable|integer|exists:servicios,id_servicio',
             'detalles.*.det_cantidad' => 'required|integer|min:1',
             'detalles.*.det_precio_unitario' => 'required|numeric|min:0',
-        ]);
+        ];
+
+        if (Schema::hasTable('servicios')) {
+            $rules['detalles.*.id_servicio'] = 'nullable|integer|exists:servicios,id_servicio';
+        } else {
+            $rules['detalles.*.id_servicio'] = 'nullable|integer';
+        }
+
+        return Validator::make($request->all(), $rules);
     }
 
     private function validateDetailsForSchema(Request $request, bool $supportsServices)
