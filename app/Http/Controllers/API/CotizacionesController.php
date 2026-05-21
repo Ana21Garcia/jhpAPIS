@@ -2,114 +2,201 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Models\Cotizaciones;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Cotizaciones;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 
 class CotizacionesController extends Controller
 {
-    // 1. LISTAR: Ahora incluimos detalles y productos para que la descripción no salga vacía
     public function index()
     {
-        $cotizaciones = Cotizaciones::with(['cliente', 'empleado', 'detalles.producto', 'detalles.servicio'])->get();
-        $cotizaciones->each(function ($cotizacion) {
-            $fecha = $cotizacion->cot_fecha ? \Carbon\Carbon::parse($cotizacion->cot_fecha) : now();
-            $vence = $fecha->copy()->addDays((int) ($cotizacion->cot_vigencia_dias ?? 0));
-            $cotizacion->cot_estado = now()->lte($vence) ? 'Vigente' : 'Vencida';
-        });
-        return response()->json($cotizaciones, 200);
+        try {
+            $cotizaciones = Cotizaciones::with($this->quoteRelations())
+                ->orderByDesc('id_cotizacion')
+                ->get();
+
+            $cotizaciones->each(function ($cotizacion) {
+                $fecha = $cotizacion->cot_fecha ? \Carbon\Carbon::parse($cotizacion->cot_fecha) : now();
+                $vence = $fecha->copy()->addDays((int) ($cotizacion->cot_vigencia_dias ?? 0));
+                $cotizacion->cot_estado = now()->lte($vence) ? 'Vigente' : 'Vencida';
+            });
+
+            return response()->json($cotizaciones, 200);
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'No se pudieron cargar las cotizaciones. Revisa que las tablas esten actualizadas.',
+                'error' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     public function store(Request $request)
     {
+        $validator = $this->validator($request);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'No se pudo guardar la cotizacion. Revisa cliente, empleado y conceptos.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
         try {
             return DB::transaction(function () use ($request) {
-                foreach ($request->input('detalles', []) as $item) {
-                    if ((int) ($item['det_cantidad'] ?? 0) <= 0) {
-                        return response()->json(['message' => 'La cotizacion requiere piezas mayores a 0'], 422);
-                    }
-                    if (empty($item['id_producto']) && empty($item['id_servicio'])) {
-                        return response()->json(['message' => 'Cada detalle requiere un producto o servicio registrado'], 422);
-                    }
+                $supportsServices = Schema::hasColumn('detalle_cotizaciones', 'id_servicio');
+                $validationError = $this->validateDetailsForSchema($request, $supportsServices);
+                if ($validationError) {
+                    return $validationError;
                 }
 
                 $cotizacion = Cotizaciones::create([
-                    'id_cliente'        => $request->id_cliente,
-                    'id_empleado'       => $request->id_empleado,
-                    'cot_fecha'         => now(),
+                    'id_cliente' => $request->id_cliente,
+                    'id_empleado' => $request->id_empleado,
+                    'cot_fecha' => now(),
                     'cot_vigencia_dias' => $request->cot_vigencia_dias ?? 15,
-                    'cot_estado'         => 'Vigente',
-                    'cot_total'         => $request->cot_total,
+                    'cot_estado' => 'Vigente',
+                    'cot_total' => $request->cot_total,
                 ]);
 
-                if ($request->has('detalles')) {
-                    foreach ($request->detalles as $item) {
-                        $cotizacion->detalles()->create([
-                            'id_producto'         => $item['id_producto'] ?? null,
-                            'id_servicio'         => $item['id_servicio'] ?? null,
-                            'det_cantidad'        => $item['det_cantidad'],
-                            'det_precio_unitario' => $item['det_precio_unitario'],
-                        ]);
-                    }
+                foreach ($request->input('detalles', []) as $item) {
+                    $cotizacion->detalles()->create($this->detailPayload($item, $supportsServices));
                 }
-                return response()->json(['message' => 'Guardado con éxito'], 201);
+
+                return response()->json([
+                    'message' => 'Guardado con exito',
+                    'data' => $cotizacion->load($this->quoteRelations()),
+                ], 201);
             });
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'No se pudo guardar la cotizacion por una restriccion de la base de datos.',
+                'error' => $e->getMessage(),
+            ], 422);
         }
     }
 
-    // 2. ACTUALIZAR: Este es el método que te faltaba y causaba el error
     public function update(Request $request, $id)
     {
+        $validator = $this->validator($request, true);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'No se pudo actualizar la cotizacion. Revisa cliente, empleado y conceptos.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
         try {
             return DB::transaction(function () use ($request, $id) {
                 $cotizacion = Cotizaciones::findOrFail($id);
-                foreach ($request->input('detalles', []) as $item) {
-                    if ((int) ($item['det_cantidad'] ?? 0) <= 0) {
-                        return response()->json(['message' => 'La cotizacion requiere piezas mayores a 0'], 422);
-                    }
-                    if (empty($item['id_producto']) && empty($item['id_servicio'])) {
-                        return response()->json(['message' => 'Cada detalle requiere un producto o servicio registrado'], 422);
-                    }
+                $supportsServices = Schema::hasColumn('detalle_cotizaciones', 'id_servicio');
+                $validationError = $this->validateDetailsForSchema($request, $supportsServices);
+                if ($validationError) {
+                    return $validationError;
                 }
-                
+
                 $cotizacion->update([
-                    'id_cliente'        => $request->id_cliente,
+                    'id_cliente' => $request->id_cliente,
+                    'id_empleado' => $request->id_empleado ?? $cotizacion->id_empleado,
                     'cot_vigencia_dias' => $request->cot_vigencia_dias,
-                    'cot_estado'         => 'Vigente',
-                    'cot_total'         => $request->cot_total,
+                    'cot_estado' => 'Vigente',
+                    'cot_total' => $request->cot_total,
                 ]);
 
-                // Borramos detalles viejos y re-insertamos los nuevos
                 $cotizacion->detalles()->delete();
 
-                foreach ($request->detalles as $item) {
-                    $cotizacion->detalles()->create([
-                        'id_producto'         => $item['id_producto'] ?? null,
-                        'id_servicio'         => $item['id_servicio'] ?? null,
-                        'det_cantidad'        => $item['det_cantidad'],
-                        'det_precio_unitario' => $item['det_precio_unitario'],
-                    ]);
+                foreach ($request->input('detalles', []) as $item) {
+                    $cotizacion->detalles()->create($this->detailPayload($item, $supportsServices));
                 }
 
-                return response()->json(['message' => 'Actualizado correctamente'], 200);
+                return response()->json([
+                    'message' => 'Actualizado correctamente',
+                    'data' => $cotizacion->load($this->quoteRelations()),
+                ], 200);
             });
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+        } catch (QueryException $e) {
+            return response()->json([
+                'message' => 'No se pudo actualizar la cotizacion por una restriccion de la base de datos.',
+                'error' => $e->getMessage(),
+            ], 422);
         }
     }
 
     public function show($id)
     {
-        $cotizacion = Cotizaciones::with(['cliente', 'empleado', 'detalles.producto', 'detalles.servicio'])->findOrFail($id);
-        return response()->json($cotizacion);
+        $cotizacion = Cotizaciones::with($this->quoteRelations())->findOrFail($id);
+        return response()->json($cotizacion, 200);
     }
 
     public function destroy($id)
     {
         Cotizaciones::destroy($id);
-        return response()->json(['message' => 'Cotización eliminada'], 200);
+        return response()->json(['message' => 'Cotizacion eliminada'], 200);
+    }
+
+    private function quoteRelations(): array
+    {
+        $relations = ['cliente', 'empleado', 'detalles.producto'];
+
+        if (Schema::hasColumn('detalle_cotizaciones', 'id_servicio')) {
+            $relations[] = 'detalles.servicio';
+        }
+
+        return $relations;
+    }
+
+    private function validator(Request $request, bool $updating = false)
+    {
+        return Validator::make($request->all(), [
+            'id_cliente' => 'required|integer|exists:clientes,id_cliente',
+            'id_empleado' => ($updating ? 'nullable' : 'required') . '|integer|exists:empleados,id_empleados',
+            'cot_vigencia_dias' => 'required|integer|min:1',
+            'cot_total' => 'required|numeric|min:0',
+            'detalles' => 'required|array|min:1',
+            'detalles.*.id_producto' => 'nullable|integer|exists:productos,id_producto',
+            'detalles.*.id_servicio' => 'nullable|integer|exists:servicios,id_servicio',
+            'detalles.*.det_cantidad' => 'required|integer|min:1',
+            'detalles.*.det_precio_unitario' => 'required|numeric|min:0',
+        ]);
+    }
+
+    private function validateDetailsForSchema(Request $request, bool $supportsServices)
+    {
+        foreach ($request->input('detalles', []) as $item) {
+            if ((int) ($item['det_cantidad'] ?? 0) <= 0) {
+                return response()->json(['message' => 'La cotizacion requiere piezas mayores a 0'], 422);
+            }
+
+            if (!$supportsServices && empty($item['id_producto'])) {
+                return response()->json([
+                    'message' => 'Esta base de datos aun no acepta servicios en cotizaciones. Selecciona un producto registrado.',
+                ], 422);
+            }
+
+            if (empty($item['id_producto']) && empty($item['id_servicio'])) {
+                return response()->json(['message' => 'Cada detalle requiere un producto o servicio registrado'], 422);
+            }
+        }
+
+        return null;
+    }
+
+    private function detailPayload(array $item, bool $supportsServices): array
+    {
+        $payload = [
+            'id_producto' => $item['id_producto'] ?? null,
+            'det_cantidad' => $item['det_cantidad'],
+            'det_precio_unitario' => $item['det_precio_unitario'],
+        ];
+
+        if ($supportsServices) {
+            $payload['id_servicio'] = $item['id_servicio'] ?? null;
+        }
+
+        return $payload;
     }
 }
