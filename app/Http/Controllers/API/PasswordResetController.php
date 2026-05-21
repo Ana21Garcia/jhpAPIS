@@ -50,7 +50,7 @@ class PasswordResetController extends Controller
 
             // Crear solicitud de recuperación
             $accountEmail = $this->emailForPasswordResetUser($usuario);
-            $deliveryEmail = $this->passwordResetDeliveryEmail();
+            $deliveryEmail = $accountEmail;
 
             $passwordReset = PasswordReset::crearSolicitud(
                 $usuario instanceof Usuario ? $usuario->id_usuario : null,
@@ -87,8 +87,7 @@ class PasswordResetController extends Controller
                     'debug_info' => config('app.debug') ? [
                         'token_created' => true,
                         'mail_sent' => false,
-                        'correo_cuenta' => $accountEmail,
-                        'correo_entrega' => $deliveryEmail,
+                        'correo' => $accountEmail,
                         'mail_error' => $mailError,
                     ] : null,
                 ], 500);
@@ -101,8 +100,7 @@ class PasswordResetController extends Controller
                     'token_created' => true,
                     'token_expires_in_hours' => 24,
                     'mail_sent' => true,
-                    'correo_cuenta' => $accountEmail,
-                    'correo_entrega' => $deliveryEmail,
+                    'correo' => $accountEmail,
                 ],
             ];
 
@@ -129,6 +127,7 @@ class PasswordResetController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+                'correo' => 'required|email',
                 'token' => 'required|string',
             ]);
 
@@ -146,6 +145,13 @@ class PasswordResetController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Token inválido o expirado',
+                ], 400);
+            }
+
+            if (!hash_equals($passwordReset->correo, $request->correo)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El token no corresponde al correo indicado',
                 ], 400);
             }
 
@@ -174,6 +180,7 @@ class PasswordResetController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+                'correo' => 'required|email',
                 'token' => 'required|string',
                 'password' => 'required|string|min:8|confirmed',
             ], [
@@ -195,6 +202,13 @@ class PasswordResetController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Token inválido o expirado',
+                ], 400);
+            }
+
+            if (!hash_equals($passwordReset->correo, $request->correo)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El token no corresponde al correo indicado',
                 ], 400);
             }
 
@@ -337,11 +351,6 @@ class PasswordResetController extends Controller
             ?? $usuario->email
             ?? $usuario->emp_correo
             ?? $usuario->cli_correo;
-    }
-
-    private function passwordResetDeliveryEmail(): string
-    {
-        return env('PASSWORD_RESET_DELIVERY_EMAIL', 'anne2jhp@gmail.com');
     }
 
     /**

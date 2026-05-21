@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class PasswordReset extends Model
@@ -44,7 +43,7 @@ class PasswordReset extends Model
      */
     public static function generateToken()
     {
-        return hash('sha256', Str::random(60));
+        return (string) random_int(100000, 999999);
     }
 
     /**
